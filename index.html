@@ -16,87 +16,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-  const firebaseConfig = {
+  firebase.initializeApp({
     apiKey: "AIzaSyByYPUw1VPs2vU8PlK0ZlXGCZ_q6BX1BeI",
     authDomain: "abvp-state.firebaseapp.com",
     projectId: "abvp-state",
     storageBucket: "abvp-state.firebasestorage.app",
     messagingSenderId: "590383791949",
-    appId: "1:590383791949:web:470be5cd57983ad93dc104",
-    measurementId: "G-X87LFE1X1J"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-
-  const _db   = firebase.firestore();
-  const _auth = firebase.auth();
-
-  // ── Helper: resolve a collection/doc reference ──────────────────────────
-  // Supports both (db, 'col') and (db, 'col', 'id') call patterns
-  function _ref(db, pathOrCol, id) {
-    if (id !== undefined) return db.collection(pathOrCol).doc(id);
-    // If path has odd number of segments it's a collection, even = doc
-    const parts = pathOrCol.split('/').filter(Boolean);
-    return parts.length % 2 === 0 ? db.doc(pathOrCol) : db.collection(pathOrCol);
-  }
-
-  // ── Normalise a snapshot to the shape the app expects ───────────────────
-  function _wrapSnap(s) {
-    return {
-      id:     s.id,
-      ref:    s.ref,
-      exists: () => s.exists,          // called as function throughout the app
-      data:   () => s.data()
-    };
-  }
-  function _wrapQuerySnap(qs) {
-    return {
-      docs:  qs.docs.map(_wrapSnap),
-      size:  qs.size,
-      empty: qs.empty
-    };
-  }
-
-  window._fb = {
-    db:   _db,
-    auth: _auth,
-
-    // ── Firestore ──────────────────────────────────────────────────────────
-    collection: (db, col)          => db.collection(col),
-    doc:        (db, col, id)      => _ref(db, col, id),
-
-    addDoc:     (ref, data)        => ref.add(data),
-    setDoc:     (ref, data, opts)  => opts ? ref.set(data, opts) : ref.set(data),
-    getDoc:     (ref)              => ref.get().then(_wrapSnap),
-    getDocs:    (ref)              => ref.get().then(_wrapQuerySnap),
-    updateDoc:  (ref, data)        => ref.update(data),
-    deleteDoc:  (ref)              => ref.delete(),
-
-    // query() chains where/orderBy calls onto a collection ref
-    query: (ref, ...fns) => fns.reduce((q, fn) => fn(q), ref),
-    where: (field, op, val) => (ref) => ref.where(field, op, val),
-    orderBy: (field, dir)   => (ref) => dir ? ref.orderBy(field, dir) : ref.orderBy(field),
-
-    onSnapshot: (ref, cb)  => ref.onSnapshot(qs => cb(_wrapQuerySnap(qs))),
-    serverTimestamp: ()    => firebase.firestore.FieldValue.serverTimestamp(),
-
-    writeBatch: (db) => {
-      const b = db.batch();
-      return {
-        set:    (ref, data) => b.set(ref, data),
-        update: (ref, data) => b.update(ref, data),
-        delete: (ref)       => b.delete(ref),
-        commit: ()          => b.commit()
-      };
-    },
-
-    // ── Auth ───────────────────────────────────────────────────────────────
-    signInWithEmailAndPassword:     (auth, e, p) => auth.signInWithEmailAndPassword(e, p),
-    createUserWithEmailAndPassword: (auth, e, p) => auth.createUserWithEmailAndPassword(e, p),
-    signOut:          (auth)  => auth.signOut(),
-    onAuthStateChanged: (auth, cb) => auth.onAuthStateChanged(cb)
-  };
-
+    appId: "1:590383791949:web:470be5cd57983ad93dc104"
+  });
   window._fbReady = true;
   document.dispatchEvent(new Event('fbReady'));
 </script>
@@ -1320,6 +1247,61 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <!-- ════════════════════════════════════════════════════════════
      JAVASCRIPT — All modules
 ════════════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════════════════
+     JAVASCRIPT — All modules
+════════════════════════════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════
+// FIREBASE COMPAT GLOBALS
+// Direct compat SDK API — no wrapper layer
+// ═══════════════════════════════════════
+const db   = firebase.firestore();
+const auth = firebase.auth();
+
+// Firestore helpers that match modular API signatures
+function collection(dbRef, col)       { return dbRef.collection(col); }
+function doc(dbRef, col, id)          { return id ? dbRef.collection(col).doc(id) : dbRef.doc(col); }
+function addDoc(ref, data)            { return ref.add(data); }
+function setDoc(ref, data, opts)      { return opts ? ref.set(data, opts) : ref.set(data); }
+function updateDoc(ref, data)         { return ref.update(data); }
+function deleteDoc(ref)               { return ref.delete(); }
+function serverTimestamp()            { return firebase.firestore.FieldValue.serverTimestamp(); }
+
+async function getDoc(ref) {
+  const s = await ref.get();
+  return { id: s.id, ref: s.ref, exists: () => s.exists, data: () => s.data() };
+}
+async function getDocs(ref) {
+  const s = await ref.get();
+  return {
+    docs: s.docs.map(d => ({ id: d.id, ref: d.ref, data: () => d.data() })),
+    size: s.size, empty: s.empty
+  };
+}
+function query(ref, ...fns)           { return fns.reduce((q, fn) => fn(q), ref); }
+function where(field, op, val)        { return (ref) => ref.where(field, op, val); }
+function orderBy(field, dir)          { return (ref) => dir ? ref.orderBy(field, dir) : ref.orderBy(field); }
+function onSnapshot(ref, cb) {
+  return ref.onSnapshot(qs => cb({
+    docs: qs.docs.map(d => ({ id: d.id, ref: d.ref, data: () => d.data() })),
+    size: qs.size, empty: qs.empty
+  }));
+}
+function writeBatch(dbRef) {
+  const b = dbRef.batch();
+  return {
+    set:    (ref, data) => b.set(ref, data),
+    update: (ref, data) => b.update(ref, data),
+    delete: (ref)       => b.delete(ref),
+    commit: ()          => b.commit()
+  };
+}
+// Auth helpers
+function signInWithEmailAndPassword(authRef, email, pass)     { return authRef.signInWithEmailAndPassword(email, pass); }
+function createUserWithEmailAndPassword(authRef, email, pass) { return authRef.createUserWithEmailAndPassword(email, pass); }
+function signOut(authRef)                                     { return authRef.signOut(); }
+function onAuthStateChanged(authRef, cb)                      { return authRef.onAuthStateChanged(cb); }
+
 <script>
 // ═══════════════════════════════════════
 // STATE & HELPERS
@@ -1375,22 +1357,21 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-password').value;
   if (!email || !pass) { showAuthErr('Please fill all fields'); return; }
-  if (!window._fb)     { showAuthErr('App still loading — please wait a moment'); return; }
+  if (!window._fbReady)     { showAuthErr('App still loading — please wait a moment'); return; }
   try {
-    const { signInWithEmailAndPassword, signOut, doc, getDoc } = window._fb;
-    const cred = await signInWithEmailAndPassword(window._fb.auth, email, pass);
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
     const uid  = cred.user ? cred.user.uid : cred.uid;
     // Check admin approval status
-    const snap = await getDoc(doc(window._fb.db, 'users', uid));
+    const snap = await getDoc(doc(db, 'users', uid));
     if (snap.exists()) {
       const ud = snap.data();
       if (ud.adminStatus === 'pending') {
-        await signOut(window._fb.auth);
+        await signOut(auth);
         showAuthErr('Your admin access is pending State Admin approval.');
         return;
       }
       if (ud.adminStatus === 'rejected') {
-        await signOut(window._fb.auth);
+        await signOut(auth);
         showAuthErr('Your admin access was rejected. Contact the State Admin.');
         return;
       }
@@ -1413,19 +1394,18 @@ async function doRegister() {
   const role  = document.getElementById('reg-role').value;
   if (!name || !email || !pass) { showAuthErr('Please fill all fields'); return; }
   if (pass.length < 6) { showAuthErr('Password must be at least 6 characters'); return; }
-  if (!window._fb) { showAuthErr('App still loading — please wait'); return; }
+  if (!window._fbReady) { showAuthErr('App still loading — please wait'); return; }
   try {
-    const { createUserWithEmailAndPassword, doc, setDoc, serverTimestamp, signOut } = window._fb;
-    const cred = await createUserWithEmailAndPassword(window._fb.auth, email, pass);
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
     const uid  = cred.user ? cred.user.uid : cred.uid;
     const isStateAdmin = role === 'state_admin';
-    await setDoc(doc(window._fb.db, 'users', uid), {
+    await setDoc(doc(db, 'users', uid), {
       name, email, phone, role,
       adminStatus: isStateAdmin ? 'approved' : 'pending',
       createdAt: serverTimestamp(), uid
     });
     if (!isStateAdmin) {
-      await signOut(window._fb.auth);
+      await signOut(auth);
       showAuthErr('Registration submitted! Waiting for State Admin approval before you can log in.');
       switchAuthTab('login');
     } else {
@@ -1449,8 +1429,7 @@ function showAuthErr(msg) {
 }
 
 async function doLogout() {
-  const { signOut } = window._fb;
-  await signOut(window._fb.auth);
+  await signOut(auth);
 }
 
 // ═══════════════════════════════════════
@@ -1501,8 +1480,7 @@ function closeSidebar() {
 // APP INIT
 // ═══════════════════════════════════════
 function initApp() {
-  const { onAuthStateChanged } = window._fb;
-  onAuthStateChanged(window._fb.auth, async (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       state.user = user;
       await loadUserProfile(user.uid);
@@ -1521,8 +1499,7 @@ function initApp() {
 }
 
 async function loadUserProfile(uid) {
-  const { doc, getDoc } = window._fb;
-  const snap = await getDoc(doc(window._fb.db, 'users', uid));
+  const snap = await getDoc(doc(db, 'users', uid));
   if (snap.exists()) {
     state.userProfile = snap.data();
     document.getElementById('sidebar-username').textContent = state.userProfile.name || 'Admin';
@@ -1531,8 +1508,7 @@ async function loadUserProfile(uid) {
 }
 
 async function startPendingBadge() {
-  const { collection, query, where, onSnapshot } = window._fb;
-  const q = query(collection(window._fb.db, 'members'), where('status','==','pending'));
+  const q = query(collection(db, 'members'), where('status','==','pending'));
   const unsub = onSnapshot(q, snap => {
     const count = snap.size;
     const badge = document.getElementById('pending-badge');
@@ -1605,12 +1581,11 @@ async function renderDashboard() {
     </div>`;
 
   // Load data
-  const { collection, getDocs, query, orderBy, where } = window._fb;
   const [membersSnap, unitsSnap, txSnap, eventsSnap] = await Promise.all([
-    getDocs(collection(window._fb.db, 'members')),
-    getDocs(collection(window._fb.db, 'units')),
-    getDocs(collection(window._fb.db, 'transactions')),
-    getDocs(collection(window._fb.db, 'events'))
+    getDocs(collection(db, 'members')),
+    getDocs(collection(db, 'units')),
+    getDocs(collection(db, 'transactions')),
+    getDocs(collection(db, 'events'))
   ]);
 
   const members = membersSnap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1739,8 +1714,7 @@ async function renderUnits() {
 }
 
 async function loadUnitsView(view) {
-  const { collection, getDocs } = window._fb;
-  const snap = await getDocs(collection(window._fb.db, 'units'));
+  const snap = await getDocs(collection(db, 'units'));
   const units = snap.docs.map(d=>({id:d.id,...d.data()}));
   state.cache.units = units;
 
@@ -1906,7 +1880,6 @@ async function saveUnit() {
   const name = document.getElementById('unit-name').value.trim();
   const level = document.getElementById('unit-level').value;
   if (!name) { toast('Unit name is required','error'); return; }
-  const { collection, addDoc, serverTimestamp } = window._fb;
   const data = {
     name, level,
     location: document.getElementById('unit-location').value.trim(),
@@ -1919,7 +1892,7 @@ async function saveUnit() {
     createdBy: state.user?.uid
   };
   try {
-    await addDoc(collection(window._fb.db, 'units'), data);
+    await addDoc(collection(db, 'units'), data);
     toast('Unit added successfully','success');
     document.getElementById('modal-addunit').remove();
     renderUnits();
@@ -1928,18 +1901,16 @@ async function saveUnit() {
 
 async function deleteUnit(id) {
   if (!confirm_dialog('Delete this unit? This cannot be undone.')) return;
-  const { doc, deleteDoc } = window._fb;
-  await deleteDoc(doc(window._fb.db, 'units', id));
+  await deleteDoc(doc(db, 'units', id));
   toast('Unit deleted');
   renderUnits();
 }
 
 async function showUnitDetail(id) {
-  const { doc, getDoc, collection, getDocs, query, where } = window._fb;
-  const snap = await getDoc(doc(window._fb.db, 'units', id));
+  const snap = await getDoc(doc(db, 'units', id));
   if (!snap.exists()) return;
   const u = {id:snap.id,...snap.data()};
-  const membersSnap = await getDocs(query(collection(window._fb.db,'members'), where('unitId','==',id)));
+  const membersSnap = await getDocs(query(collection(db,'members'), where('unitId','==',id)));
   const members = membersSnap.docs.map(d=>({id:d.id,...d.data()}));
   const heads = {state:'Convenor',university:'President',college:'Principal',faculty:'HoD'};
 
@@ -2054,8 +2025,7 @@ async function renderMembers() {
 
   // Load units if needed
   if (!state.cache.units.length) {
-    const { collection, getDocs } = window._fb;
-    const s = await getDocs(collection(window._fb.db, 'units'));
+    const s = await getDocs(collection(db, 'units'));
     state.cache.units = s.docs.map(d=>({id:d.id,...d.data()}));
     const sel = document.getElementById('filter-unit');
     if (sel) state.cache.units.forEach(u => {
@@ -2065,8 +2035,7 @@ async function renderMembers() {
   }
 
   // Real-time listener
-  const { collection, onSnapshot, orderBy, query } = window._fb;
-  const q = query(collection(window._fb.db,'members'), orderBy('createdAt','desc'));
+  const q = query(collection(db,'members'), orderBy('createdAt','desc'));
   const unsub = onSnapshot(q, snap => {
     state.cache.members = snap.docs.map(d=>({id:d.id,...d.data()}));
     renderMembersTable(state.cache.members);
@@ -2133,18 +2102,16 @@ function toggleSelectAll(cb) {
 async function bulkApprove() {
   const selected = [...document.querySelectorAll('.member-check:checked')].map(c=>c.value);
   if (!selected.length) { toast('Select members to approve','error'); return; }
-  const { doc, updateDoc } = window._fb;
-  const promises = selected.map(id => updateDoc(doc(window._fb.db,'members',id), {status:'approved'}));
+  const promises = selected.map(id => updateDoc(doc(db,'members',id), {status:'approved'}));
   await Promise.all(promises);
   toast(`${selected.length} member(s) approved`,'success');
 }
 
 async function approveMember(id) {
-  const { doc, updateDoc, serverTimestamp } = window._fb;
   const member = state.cache.members.find(m=>m.id===id);
   const today = new Date().toISOString().split('T')[0];
   const validity = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0];
-  await updateDoc(doc(window._fb.db,'members',id), {
+  await updateDoc(doc(db,'members',id), {
     status:'approved',
     approvedAt: serverTimestamp(),
     doj: member?.doj || today,
@@ -2155,8 +2122,7 @@ async function approveMember(id) {
 
 async function deleteMember(id) {
   if (!confirm_dialog('Delete this member?')) return;
-  const { doc, deleteDoc } = window._fb;
-  await deleteDoc(doc(window._fb.db,'members',id));
+  await deleteDoc(doc(db,'members',id));
   toast('Member deleted');
 }
 
@@ -2243,9 +2209,8 @@ async function saveMember() {
   const name = document.getElementById('m-name').value.trim();
   const phone = document.getElementById('m-phone').value.trim();
   if (!name||!phone) { toast('Name and phone required','error'); return; }
-  const { collection, addDoc, serverTimestamp } = window._fb;
   const memberId = genId('MBR');
-  await addDoc(collection(window._fb.db,'members'), {
+  await addDoc(collection(db,'members'), {
     name, phone, memberId,
     email: document.getElementById('m-email').value.trim(),
     role: document.getElementById('m-role').value,
@@ -2263,8 +2228,7 @@ async function saveMember() {
 }
 
 async function showMemberDetail(id) {
-  const { doc, getDoc } = window._fb;
-  const snap = await getDoc(doc(window._fb.db,'members',id));
+  const snap = await getDoc(doc(db,'members',id));
   if (!snap.exists()) return;
   const m = {id:snap.id,...snap.data()};
   const units = state.cache.units;
@@ -2378,12 +2342,11 @@ function toggleEditMemberModal(id) {
 }
 
 async function saveMemberEdits(id) {
-  const { doc, updateDoc } = window._fb;
   const fields = ['phone','email','fatherName','dob','gender','category','college','course','branch','yearOfStudy','rollNo','whatsapp','doj','validity','address','reason','unitId','role'];
   const updates = {};
   fields.forEach(f => { const el=document.getElementById(`mf-${f}`); if(el) updates[f]=el.value.trim()||null; });
   try {
-    await updateDoc(doc(window._fb.db,'members',id), updates);
+    await updateDoc(doc(db,'members',id), updates);
     toast('Member updated','success');
     document.getElementById('modal-memberdetail').remove();
   } catch(e) { toast('Error: '+e.message,'error'); }
@@ -2391,8 +2354,7 @@ async function saveMemberEdits(id) {
 
 async function rejectMemberById(id) {
   if (!confirm_dialog('Reject this member?')) return;
-  const { doc, updateDoc } = window._fb;
-  await updateDoc(doc(window._fb.db,'members',id), {status:'rejected'});
+  await updateDoc(doc(db,'members',id), {status:'rejected'});
   toast('Member rejected');
   document.getElementById('modal-memberdetail')?.remove();
 }
@@ -2408,8 +2370,7 @@ async function uploadAndUpdatePhoto(input, memberId) {
     const data = await res.json();
     if(!data.success) throw new Error(data.error?.message||'Upload failed');
     const url = data.data.url;
-    const { doc, updateDoc } = window._fb;
-    await updateDoc(doc(window._fb.db,'members',memberId),{photo:url});
+    await updateDoc(doc(db,'members',memberId),{photo:url});
     const imgEl = document.getElementById('mdp-photo');
     if(imgEl) { imgEl.src=url; }
     toast('Photo updated!','success');
@@ -2452,8 +2413,7 @@ async function renderIdCards() {
     </div>
     <div id="id-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;margin-top:8px"></div>`;
 
-  const { collection, getDocs, query, where } = window._fb;
-  const snap = await getDocs(query(collection(window._fb.db,'members'), where('status','==','approved')));
+  const snap = await getDocs(query(collection(db,'members'), where('status','==','approved')));
   state.cache.members = snap.docs.map(d=>({id:d.id,...d.data()}));
   renderIdCardsGrid(state.cache.members);
 }
@@ -2573,10 +2533,9 @@ async function renderFinance() {
 }
 
 async function loadFinView(view) {
-  const { collection, getDocs, query, orderBy } = window._fb;
   const [txSnap, objSnap] = await Promise.all([
-    getDocs(query(collection(window._fb.db,'transactions'), orderBy('createdAt','desc'))),
-    getDocs(collection(window._fb.db,'objectives'))
+    getDocs(query(collection(db,'transactions'), orderBy('createdAt','desc'))),
+    getDocs(collection(db,'objectives'))
   ]);
   const txs = txSnap.docs.map(d=>({id:d.id,...d.data()}));
   const objectives = objSnap.docs.map(d=>({id:d.id,...d.data()}));
@@ -2823,8 +2782,7 @@ function showAddObjective() {
 async function saveObjective() {
   const name = document.getElementById('obj-name').value.trim();
   if (!name) { toast('Fund name required','error'); return; }
-  const { collection, addDoc, serverTimestamp } = window._fb;
-  await addDoc(collection(window._fb.db,'objectives'), {
+  await addDoc(collection(db,'objectives'), {
     name, description: document.getElementById('obj-desc').value.trim(),
     targetAmount: parseFloat(document.getElementById('obj-target').value)||0,
     createdAt: serverTimestamp(), createdBy: state.user?.uid
@@ -2902,8 +2860,7 @@ async function saveTransaction() {
   const amount = parseFloat(document.getElementById('tx-amount').value);
   const desc = document.getElementById('tx-desc').value.trim();
   if (!amount||amount<=0||!desc) { toast('Amount and description required','error'); return; }
-  const { collection, addDoc, serverTimestamp } = window._fb;
-  await addDoc(collection(window._fb.db,'transactions'), {
+  await addDoc(collection(db,'transactions'), {
     type: document.getElementById('tx-type').value,
     amount,
     description: desc,
@@ -2925,13 +2882,12 @@ async function doTransfer() {
   const note = document.getElementById('tx-note').value.trim();
   if (from===to) { toast('Source and destination must differ','error'); return; }
   if (!amount||amount<=0) { toast('Enter a valid amount','error'); return; }
-  const { collection, addDoc, serverTimestamp } = window._fb;
   const batch = [
-    addDoc(collection(window._fb.db,'transactions'), {
+    addDoc(collection(db,'transactions'), {
       type:'expense', amount, description:`Transfer to ${to==='general'?'General Fund':state.cache.objectives.find(o=>o.id===to)?.name||to}. ${note}`,
       objectiveId: from==='general'?null:from, category:'Transfer', createdAt: serverTimestamp(), createdBy: state.user?.uid
     }),
-    addDoc(collection(window._fb.db,'transactions'), {
+    addDoc(collection(db,'transactions'), {
       type:'income', amount, description:`Transfer from ${from==='general'?'General Fund':state.cache.objectives.find(o=>o.id===from)?.name||from}. ${note}`,
       objectiveId: to==='general'?null:to, category:'Transfer', createdAt: serverTimestamp(), createdBy: state.user?.uid
     })
@@ -2958,8 +2914,7 @@ async function renderEvents() {
       <div class="empty-state"><div class="spinner" style="margin:0 auto"></div></div>
     </div>`;
 
-  const { collection, getDocs, query, orderBy } = window._fb;
-  const snap = await getDocs(query(collection(window._fb.db,'events'), orderBy('createdAt','desc')));
+  const snap = await getDocs(query(collection(db,'events'), orderBy('createdAt','desc')));
   state.cache.events = snap.docs.map(d=>({id:d.id,...d.data()}));
   renderEventsGrid(state.cache.events);
 }
@@ -3063,8 +3018,7 @@ function showAddEvent() {
 async function saveEvent() {
   const title = document.getElementById('ev-title').value.trim();
   if (!title) { toast('Event title required','error'); return; }
-  const { collection, addDoc, serverTimestamp } = window._fb;
-  await addDoc(collection(window._fb.db,'events'), {
+  await addDoc(collection(db,'events'), {
     title, date: document.getElementById('ev-date').value,
     time: document.getElementById('ev-time').value,
     location: document.getElementById('ev-location').value.trim(),
@@ -3083,18 +3037,16 @@ async function saveEvent() {
 
 async function deleteEvent(id) {
   if (!confirm_dialog('Delete this event?')) return;
-  const { doc, deleteDoc } = window._fb;
-  await deleteDoc(doc(window._fb.db,'events',id));
+  await deleteDoc(doc(db,'events',id));
   toast('Event deleted');
   renderEvents();
 }
 
 async function showEventAttendance(eventId) {
-  const { collection, getDocs, query, where, doc, setDoc, serverTimestamp } = window._fb;
   const event = state.cache.events.find(e=>e.id===eventId);
-  const atSnap = await getDocs(query(collection(window._fb.db,'attendance'), where('eventId','==',eventId)));
+  const atSnap = await getDocs(query(collection(db,'attendance'), where('eventId','==',eventId)));
   const attendees = new Set(atSnap.docs.map(d=>d.data().memberId));
-  const members = state.cache.members.length ? state.cache.members : (await getDocs(collection(window._fb.db,'members'))).docs.map(d=>({id:d.id,...d.data()}));
+  const members = state.cache.members.length ? state.cache.members : (await getDocs(collection(db,'members'))).docs.map(d=>({id:d.id,...d.data()}));
 
   document.getElementById('app').insertAdjacentHTML('beforeend',`
     <div class="modal-overlay show" id="modal-attendance">
@@ -3128,13 +3080,12 @@ async function showEventAttendance(eventId) {
 
 async function saveAttendance(eventId) {
   const checked = [...document.querySelectorAll('[id^="att-"]:checked')].map(c=>c.value);
-  const { collection, doc, setDoc, serverTimestamp, writeBatch, getDocs, query, where, deleteDoc } = window._fb;
   // Delete existing
-  const existing = await getDocs(query(collection(window._fb.db,'attendance'), where('eventId','==',eventId)));
-  const batch = writeBatch(window._fb.db);
+  const existing = await getDocs(query(collection(db,'attendance'), where('eventId','==',eventId)));
+  const batch = writeBatch(db);
   existing.docs.forEach(d => batch.delete(d.ref));
   checked.forEach(memberId => {
-    const ref = doc(collection(window._fb.db,'attendance'));
+    const ref = doc(collection(db,'attendance'));
     batch.set(ref, {eventId, memberId, markedAt: serverTimestamp()});
   });
   await batch.commit();
@@ -3229,8 +3180,7 @@ async function renderNotifications() {
       </div>
     </div>`;
 
-  const { collection, getDocs, query, orderBy } = window._fb;
-  const snap = await getDocs(query(collection(window._fb.db,'notifications'), orderBy('createdAt','desc')));
+  const snap = await getDocs(query(collection(db,'notifications'), orderBy('createdAt','desc')));
   state.cache.notifications = snap.docs.map(d=>({id:d.id,...d.data()}));
 
   const list = document.getElementById('notif-list');
@@ -3257,8 +3207,7 @@ async function sendQuickNotif() {
   const msg = document.getElementById('qn-msg').value.trim();
   const level = document.getElementById('qn-level').value;
   if (!title||!msg) { toast('Title and message required','error'); return; }
-  const { collection, addDoc, serverTimestamp } = window._fb;
-  await addDoc(collection(window._fb.db,'notifications'), {
+  await addDoc(collection(db,'notifications'), {
     title, message: msg, level, createdAt: serverTimestamp(), createdBy: state.user?.uid
   });
   toast('Broadcast sent','success');
@@ -3321,8 +3270,7 @@ async function saveBroadcast() {
   const title = document.getElementById('bn-title').value.trim();
   const msg = document.getElementById('bn-msg').value.trim();
   if (!title||!msg) { toast('Fill all required fields','error'); return; }
-  const { collection, addDoc, serverTimestamp } = window._fb;
-  await addDoc(collection(window._fb.db,'notifications'), {
+  await addDoc(collection(db,'notifications'), {
     title, message: msg,
     level: document.getElementById('bn-level').value,
     priority: document.getElementById('bn-priority').value,
@@ -3458,8 +3406,7 @@ async function saveProfile() {
   const name = document.getElementById('s-name').value.trim();
   const phone = document.getElementById('s-phone').value.trim();
   if (!name) { toast('Name required','error'); return; }
-  const { doc, updateDoc } = window._fb;
-  await updateDoc(doc(window._fb.db,'users', state.user.uid), {name, phone});
+  await updateDoc(doc(db,'users', state.user.uid), {name, phone});
   state.userProfile = {...(state.userProfile||{}), name, phone};
   document.getElementById('sidebar-username').textContent = name;
   toast('Profile updated','success');
@@ -3473,8 +3420,7 @@ async function saveProfile() {
 // EDIT MEMBER
 // ═══════════════════════════════════════
 async function editMember(id) {
-  const { doc, getDoc } = window._fb;
-  const snap = await getDoc(doc(window._fb.db,'members',id));
+  const snap = await getDoc(doc(db,'members',id));
   if(!snap.exists()) return;
   const m = {id:snap.id,...snap.data()};
   const units = state.cache.units||[];
@@ -3535,7 +3481,6 @@ async function editMember(id) {
 }
 
 async function saveEditMember(id) {
-  const { doc, updateDoc } = window._fb;
   const updates = {
     name: document.getElementById('em-name').value.trim(),
     phone: document.getElementById('em-phone').value.trim(),
@@ -3555,7 +3500,7 @@ async function saveEditMember(id) {
     address: document.getElementById('em-address').value.trim(),
   };
   if(!updates.name){toast('Name required','error');return}
-  await updateDoc(doc(window._fb.db,'members',id), updates);
+  await updateDoc(doc(db,'members',id), updates);
   toast('Member updated successfully','success');
   document.getElementById('modal-editmember').remove();
 }
@@ -3564,8 +3509,7 @@ async function saveEditMember(id) {
 // EDIT UNIT
 // ═══════════════════════════════════════
 async function editUnit(id) {
-  const { doc, getDoc } = window._fb;
-  const snap = await getDoc(doc(window._fb.db,'units',id));
+  const snap = await getDoc(doc(db,'units',id));
   if(!snap.exists()) return;
   const u = {id:snap.id,...snap.data()};
   const allUnits = state.cache.units||[];
@@ -3605,8 +3549,7 @@ async function editUnit(id) {
 async function saveEditUnit(id) {
   const name = document.getElementById('eu-name').value.trim();
   if(!name){toast('Name required','error');return}
-  const { doc, updateDoc } = window._fb;
-  await updateDoc(doc(window._fb.db,'units',id), {
+  await updateDoc(doc(db,'units',id), {
     name, level: document.getElementById('eu-level').value,
     location: document.getElementById('eu-loc').value.trim(),
     headName: document.getElementById('eu-head').value.trim(),
@@ -3624,8 +3567,7 @@ async function saveEditUnit(id) {
 // PRINT MEMBER PROFILE
 // ═══════════════════════════════════════
 async function printMemberProfile(id) {
-  const { doc, getDoc } = window._fb;
-  const snap = await getDoc(doc(window._fb.db,'members',id));
+  const snap = await getDoc(doc(db,'members',id));
   if(!snap.exists()) return;
   const m = {id:snap.id,...snap.data()};
   const unit = state.cache.units.find(u=>u.id===m.unitId);
@@ -3692,10 +3634,9 @@ async function loadJoinUnits() {
   const sel = document.getElementById('j-unit');
   if (!sel) return;
   // Try firebase if ready, else show placeholder
-  if (!window._fb) { sel.innerHTML = '<option value="">— No units loaded —</option>'; return; }
+  if (!window._fbReady) { sel.innerHTML = '<option value="">— No units loaded —</option>'; return; }
   try {
-    const { collection, getDocs, query, where } = window._fb;
-    const snap = await getDocs(collection(window._fb.db, 'units'));
+    const snap = await getDocs(collection(db, 'units'));
     const units = snap.docs.map(d=>({id:d.id,...d.data()}));
     sel.innerHTML = '<option value="">— Select your unit —</option>' +
       units.map(u=>`<option value="${u.id}">[${u.level}] ${u.name}</option>`).join('');
@@ -3826,8 +3767,7 @@ async function submitJoinForm() {
   };
 
   try {
-    const { collection, addDoc, serverTimestamp } = window._fb;
-    await addDoc(collection(window._fb.db, 'members'), {
+    await addDoc(collection(db, 'members'), {
       ...data,
       createdAt: serverTimestamp()
     });
@@ -3933,12 +3873,11 @@ async function renderAdmins() {
 }
 
 async function loadAdminsView(filter) {
-  const { collection, getDocs, query, where, orderBy } = window._fb;
   let q;
   if(filter==='pending') {
-    q = query(collection(window._fb.db,'users'), where('adminStatus','==','pending'));
+    q = query(collection(db,'users'), where('adminStatus','==','pending'));
   } else {
-    q = query(collection(window._fb.db,'users'), orderBy('createdAt','desc'));
+    q = query(collection(db,'users'), orderBy('createdAt','desc'));
   }
   const snap = await getDocs(q);
   const admins = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -3980,13 +3919,11 @@ async function loadAdminsView(filter) {
 }
 
 async function setAdminStatus(uid, status) {
-  const { doc, updateDoc } = window._fb;
-  await updateDoc(doc(window._fb.db,'users',uid), {adminStatus: status});
+  await updateDoc(doc(db,'users',uid), {adminStatus: status});
   toast(\`Admin access \${status}\`,'success');
   loadAdminsView('all');
   // Update badge
-  const { collection, query, where, getDocs } = window._fb;
-  const q = query(collection(window._fb.db,'users'), where('adminStatus','==','pending'));
+  const q = query(collection(db,'users'), where('adminStatus','==','pending'));
   const snap = await getDocs(q);
   const badge = document.getElementById('admin-badge');
   if(badge){ badge.textContent=snap.size; badge.style.display=snap.size>0?'inline-flex':'none'; }
@@ -4003,8 +3940,7 @@ function switchAdmTab(v,btn){
 // ═══════════════════════════════════════
 async function startAdminBadge() {
   if(state.userProfile?.role !== 'state_admin') return;
-  const { collection, query, where, onSnapshot } = window._fb;
-  const q = query(collection(window._fb.db,'users'), where('adminStatus','==','pending'));
+  const q = query(collection(db,'users'), where('adminStatus','==','pending'));
   const unsub = onSnapshot(q, snap => {
     const badge = document.getElementById('admin-badge');
     if(badge){ badge.textContent=snap.size; badge.style.display=snap.size>0?'inline-flex':'none'; }
@@ -4051,9 +3987,8 @@ function startApp() {
     if (statusEl) statusEl.textContent = '✓ Connected — ready to sign in';
     initApp();
     // Pre-load units for join form
-    if (window._fb) {
-      const { collection, getDocs } = window._fb;
-      getDocs(collection(window._fb.db,'units')).then(snap => {
+    if (window._fbReady) {
+      getDocs(collection(db,'units')).then(snap => {
         state.cache.units = snap.docs.map(d=>({id:d.id,...d.data()}));
       }).catch(()=>{});
     }
@@ -4077,6 +4012,7 @@ function startApp() {
 }
 
 startApp();
+</script>
 </script>
 </body>
 </html>
