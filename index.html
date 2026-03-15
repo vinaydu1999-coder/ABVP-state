@@ -11,13 +11,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  // ─── FIREBASE CONFIG ───────────────────────────────────────────────────────
+<!-- Firebase compat SDK — synchronous, no module scope issues -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyByYPUw1VPs2vU8PlK0ZlXGCZ_q6BX1BeI",
     authDomain: "abvp-state.firebaseapp.com",
@@ -27,19 +25,78 @@
     appId: "1:590383791949:web:470be5cd57983ad93dc104",
     measurementId: "G-X87LFE1X1J"
   };
-  // ───────────────────────────────────────────────────────────────────────────
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+  firebase.initializeApp(firebaseConfig);
 
-  // Make globally available
+  const _db   = firebase.firestore();
+  const _auth = firebase.auth();
+
+  // ── Helper: resolve a collection/doc reference ──────────────────────────
+  // Supports both (db, 'col') and (db, 'col', 'id') call patterns
+  function _ref(db, pathOrCol, id) {
+    if (id !== undefined) return db.collection(pathOrCol).doc(id);
+    // If path has odd number of segments it's a collection, even = doc
+    const parts = pathOrCol.split('/').filter(Boolean);
+    return parts.length % 2 === 0 ? db.doc(pathOrCol) : db.collection(pathOrCol);
+  }
+
+  // ── Normalise a snapshot to the shape the app expects ───────────────────
+  function _wrapSnap(s) {
+    return {
+      id:     s.id,
+      ref:    s.ref,
+      exists: () => s.exists,          // called as function throughout the app
+      data:   () => s.data()
+    };
+  }
+  function _wrapQuerySnap(qs) {
+    return {
+      docs:  qs.docs.map(_wrapSnap),
+      size:  qs.size,
+      empty: qs.empty
+    };
+  }
+
   window._fb = {
-    db, auth,
-    collection, doc, addDoc, setDoc, getDoc, getDocs, updateDoc, deleteDoc,
-    query, where, orderBy, onSnapshot, serverTimestamp, writeBatch,
-    signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
+    db:   _db,
+    auth: _auth,
+
+    // ── Firestore ──────────────────────────────────────────────────────────
+    collection: (db, col)          => db.collection(col),
+    doc:        (db, col, id)      => _ref(db, col, id),
+
+    addDoc:     (ref, data)        => ref.add(data),
+    setDoc:     (ref, data, opts)  => opts ? ref.set(data, opts) : ref.set(data),
+    getDoc:     (ref)              => ref.get().then(_wrapSnap),
+    getDocs:    (ref)              => ref.get().then(_wrapQuerySnap),
+    updateDoc:  (ref, data)        => ref.update(data),
+    deleteDoc:  (ref)              => ref.delete(),
+
+    // query() chains where/orderBy calls onto a collection ref
+    query: (ref, ...fns) => fns.reduce((q, fn) => fn(q), ref),
+    where: (field, op, val) => (ref) => ref.where(field, op, val),
+    orderBy: (field, dir)   => (ref) => dir ? ref.orderBy(field, dir) : ref.orderBy(field),
+
+    onSnapshot: (ref, cb)  => ref.onSnapshot(qs => cb(_wrapQuerySnap(qs))),
+    serverTimestamp: ()    => firebase.firestore.FieldValue.serverTimestamp(),
+
+    writeBatch: (db) => {
+      const b = db.batch();
+      return {
+        set:    (ref, data) => b.set(ref, data),
+        update: (ref, data) => b.update(ref, data),
+        delete: (ref)       => b.delete(ref),
+        commit: ()          => b.commit()
+      };
+    },
+
+    // ── Auth ───────────────────────────────────────────────────────────────
+    signInWithEmailAndPassword:     (auth, e, p) => auth.signInWithEmailAndPassword(e, p),
+    createUserWithEmailAndPassword: (auth, e, p) => auth.createUserWithEmailAndPassword(e, p),
+    signOut:          (auth)  => auth.signOut(),
+    onAuthStateChanged: (auth, cb) => auth.onAuthStateChanged(cb)
   };
+
   window._fbReady = true;
   document.dispatchEvent(new Event('fbReady'));
 </script>
@@ -1316,29 +1373,31 @@ function switchAuthTab(tab) {
 
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-password').value;
-  if (!email||!pass) { showAuthErr('Please fill all fields'); return; }
-  if (!window._fb) { showAuthErr('App still loading — please wait a moment and try again.'); return; }
+  const pass  = document.getElementById('login-password').value;
+  if (!email || !pass) { showAuthErr('Please fill all fields'); return; }
+  if (!window._fb)     { showAuthErr('App still loading — please wait a moment'); return; }
   try {
     const { signInWithEmailAndPassword, signOut, doc, getDoc } = window._fb;
     const cred = await signInWithEmailAndPassword(window._fb.auth, email, pass);
+    const uid  = cred.user ? cred.user.uid : cred.uid;
     // Check admin approval status
-    const userSnap = await getDoc(doc(window._fb.db, 'users', cred.user.uid));
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      if (userData.adminStatus === 'pending') {
+    const snap = await getDoc(doc(window._fb.db, 'users', uid));
+    if (snap.exists()) {
+      const ud = snap.data();
+      if (ud.adminStatus === 'pending') {
         await signOut(window._fb.auth);
-        showAuthErr('Your admin access is pending State Admin approval. Please wait.');
+        showAuthErr('Your admin access is pending State Admin approval.');
         return;
       }
-      if (userData.adminStatus === 'rejected') {
+      if (ud.adminStatus === 'rejected') {
         await signOut(window._fb.auth);
-        showAuthErr('Your admin access request was rejected. Contact the State Admin.');
+        showAuthErr('Your admin access was rejected. Contact the State Admin.');
         return;
       }
     }
   } catch(e) {
-    if (e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') {
+    const code = e.code || '';
+    if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) {
       showAuthErr('Invalid email or password.');
     } else {
       showAuthErr(e.message);
@@ -1347,37 +1406,36 @@ async function doLogin() {
 }
 
 async function doRegister() {
-  const name = document.getElementById('reg-name').value.trim();
+  const name  = document.getElementById('reg-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
-  const pass = document.getElementById('reg-password').value;
-  const phone = document.getElementById('reg-phone')?.value.trim()||'';
-  const role = document.getElementById('reg-role').value;
-  if (!name||!email||!pass) { showAuthErr('Please fill all fields'); return; }
+  const pass  = document.getElementById('reg-password').value;
+  const phone = document.getElementById('reg-phone')?.value.trim() || '';
+  const role  = document.getElementById('reg-role').value;
+  if (!name || !email || !pass) { showAuthErr('Please fill all fields'); return; }
   if (pass.length < 6) { showAuthErr('Password must be at least 6 characters'); return; }
+  if (!window._fb) { showAuthErr('App still loading — please wait'); return; }
   try {
-    const { createUserWithEmailAndPassword, doc, setDoc, serverTimestamp } = window._fb;
+    const { createUserWithEmailAndPassword, doc, setDoc, serverTimestamp, signOut } = window._fb;
     const cred = await createUserWithEmailAndPassword(window._fb.auth, email, pass);
-    // State admin is auto-approved; university/unit admins need state admin approval
+    const uid  = cred.user ? cred.user.uid : cred.uid;
     const isStateAdmin = role === 'state_admin';
-    await setDoc(doc(window._fb.db, 'users', cred.user.uid), {
+    await setDoc(doc(window._fb.db, 'users', uid), {
       name, email, phone, role,
       adminStatus: isStateAdmin ? 'approved' : 'pending',
-      createdAt: serverTimestamp(), uid: cred.user.uid
+      createdAt: serverTimestamp(), uid
     });
     if (!isStateAdmin) {
-      // Sign out immediately — must wait for approval
-      const { signOut } = window._fb;
       await signOut(window._fb.auth);
       showAuthErr('Registration submitted! Waiting for State Admin approval before you can log in.');
       switchAuthTab('login');
     } else {
-      toast('State Admin account created!','success');
+      toast('State Admin account created!', 'success');
     }
   } catch(e) {
-    if (e.code==='auth/email-already-in-use') {
+    if (e.code === 'auth/email-already-in-use') {
       showAuthErr('This email is already registered. Please sign in.');
-    } else if (e.code==='auth/weak-password') {
-      showAuthErr('Password is too weak. Use at least 6 characters.');
+    } else if (e.code === 'auth/weak-password') {
+      showAuthErr('Password too weak. Use at least 6 characters.');
     } else {
       showAuthErr(e.message);
     }
