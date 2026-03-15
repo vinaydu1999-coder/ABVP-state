@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1a2744">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>OrgNet — State Organisation Management</title>
+<title>ABVP — State Organisation Management</title>
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -17,16 +17,16 @@
   import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  // ─── FIREBASE CONFIG —
-const firebaseConfig = {
-  apiKey: "AIzaSyByYPUw1VPs2vU8PlK0ZlXGCZ_q6BX1BeI",
-  authDomain: "abvp-state.firebaseapp.com",
-  projectId: "abvp-state",
-  storageBucket: "abvp-state.firebasestorage.app",
-  messagingSenderId: "590383791949",
-  appId: "1:590383791949:web:470be5cd57983ad93dc104",
-  measurementId: "G-X87LFE1X1J"
-};
+  // ─── FIREBASE CONFIG ───────────────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey: "AIzaSyByYPUw1VPs2vU8PlK0ZlXGCZ_q6BX1BeI",
+    authDomain: "abvp-state.firebaseapp.com",
+    projectId: "abvp-state",
+    storageBucket: "abvp-state.firebasestorage.app",
+    messagingSenderId: "590383791949",
+    appId: "1:590383791949:web:470be5cd57983ad93dc104",
+    measurementId: "G-X87LFE1X1J"
+  };
   // ───────────────────────────────────────────────────────────────────────────
 
   const app = initializeApp(firebaseConfig);
@@ -858,6 +858,108 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .invitation-card .inv-details { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 16px 0; margin: 16px 0; }
 .invitation-card .inv-detail-row { display: flex; justify-content: center; gap: 8px; font-size: .9rem; color: var(--text-mid); margin: 5px 0; }
 .invitation-card .inv-footer { font-size: .75rem; color: var(--text-soft); letter-spacing: .08em; text-transform: uppercase; margin-top: 20px; }
+
+/* ═══════════════════════════════════════
+   JOIN FORM PAGE
+═══════════════════════════════════════ */
+#join-screen {
+  display: none; position: fixed; inset: 0; z-index: 9998;
+  background: linear-gradient(135deg, #ff5500 0%, #1a2744 60%, #0f1a30 100%);
+  overflow-y: auto; padding: 20px 16px 40px;
+}
+#join-screen.show { display: block; }
+.join-panel {
+  max-width: 680px; margin: 0 auto;
+  background: var(--white); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); overflow: hidden;
+}
+.join-header {
+  background: linear-gradient(135deg, var(--navy-deep), var(--navy));
+  padding: 28px 32px; text-align: center;
+  border-bottom: 4px solid #ff6600;
+}
+.join-header .abvp-logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px; border-radius: 16px;
+  background: linear-gradient(135deg, #ff5500, #ff8c42);
+  font-family: var(--font-serif); font-size: 28px; font-weight: 700;
+  color: white; margin-bottom: 12px;
+}
+.join-header h1 { font-family: var(--font-serif); font-size: 1.8rem; color: white; font-weight: 700; }
+.join-header p { color: rgba(255,255,255,.6); font-size: .85rem; margin-top: 4px; }
+.join-header .join-tagline { color: #ff9966; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; margin-top: 6px; }
+.join-body { padding: 28px 32px; }
+.join-section-title {
+  font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600;
+  color: var(--navy); border-bottom: 2px solid #ff6600;
+  padding-bottom: 6px; margin: 20px 0 14px;
+}
+.join-section-title:first-child { margin-top: 0; }
+.photo-upload-box {
+  border: 2px dashed var(--border); border-radius: var(--radius-md);
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: all .2s; background: var(--cream);
+}
+.photo-upload-box:hover { border-color: #ff6600; background: #fff8f5; }
+.photo-preview {
+  width: 90px; height: 90px; border-radius: 50%;
+  object-fit: cover; border: 3px solid #ff6600;
+  display: none; margin: 0 auto 8px;
+}
+.photo-upload-icon { font-size: 2rem; color: var(--text-soft); margin-bottom: 6px; }
+.photo-upload-text { font-size: .82rem; color: var(--text-soft); }
+.join-footer {
+  background: var(--cream); padding: 20px 32px;
+  border-top: 1px solid var(--border); text-align: center;
+}
+.btn-join {
+  background: linear-gradient(135deg, #ff5500, #ff7733);
+  color: white; border: none; padding: 14px 48px;
+  border-radius: var(--radius-sm); font-family: var(--font-sans);
+  font-size: 1rem; font-weight: 700; cursor: pointer;
+  letter-spacing: .04em; transition: opacity .2s;
+}
+.btn-join:hover { opacity: .9; }
+.btn-join:disabled { opacity: .5; cursor: not-allowed; }
+
+/* QR verification page */
+.verify-card {
+  max-width: 420px; margin: 40px auto; background: var(--white);
+  border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+/* Edit inline */
+.editable-field {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--cream-mid);
+  font-size: .87rem;
+}
+.editable-field .field-label { color: var(--text-soft); min-width: 120px; }
+.editable-field .field-value { flex: 1; font-weight: 500; }
+.editable-field .field-input {
+  flex: 1; padding: 4px 8px; border: 1px solid var(--navy);
+  border-radius: 3px; font-family: var(--font-sans); font-size: .87rem; display: none;
+}
+.editable-field.editing .field-value { display: none; }
+.editable-field.editing .field-input { display: block; }
+
+/* Print styles enhanced */
+@media print {
+  .sidebar, .topbar, .page-header .btn, .no-print,
+  .filter-bar, .tabs, .nav-item, .btn-logout,
+  .modal-close, .modal-footer { display: none !important; }
+  .main-wrap { margin: 0 !important; }
+  .card { box-shadow: none !important; break-inside: avoid; }
+  body { background: white; font-size: 12px; }
+  .id-card { page-break-inside: avoid; }
+  h2 { font-size: 1.4rem !important; }
+  .print-header {
+    display: flex !important; align-items: center; gap: 14px;
+    padding: 12px 0; border-bottom: 2px solid #1a2744; margin-bottom: 16px;
+  }
+}
+.print-header { display: none; }
 </style>
 </head>
 <body>
@@ -865,51 +967,213 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<!-- AUTH SCREEN -->
+<!-- JOIN FORM SCREEN -->
+<div id="join-screen">
+  <div class="join-panel">
+    <div class="join-header">
+      <div class="abvp-logo">अ</div>
+      <h1>ABVP</h1>
+      <p>Akhil Bharatiya Vidyarthi Parishad</p>
+      <div class="join-tagline">Membership Registration Form</div>
+    </div>
+    <div class="join-body">
+      <!-- Photo Upload -->
+      <div class="join-section-title">Profile Photo</div>
+      <div class="photo-upload-box" onclick="document.getElementById('join-photo-file').click()" id="photo-box">
+        <img id="photo-preview" class="photo-preview" src="" alt="Preview">
+        <div id="photo-icon" class="photo-upload-icon">📷</div>
+        <div class="photo-upload-text" id="photo-text">Click to upload photo<br><small>JPG, PNG — max 5MB. Will be uploaded to ImgBB</small></div>
+        <div id="photo-progress" style="display:none;margin-top:8px">
+          <div style="background:var(--cream-mid);border-radius:10px;height:6px;overflow:hidden">
+            <div id="photo-prog-bar" style="height:100%;width:0%;background:#ff6600;transition:width .3s"></div>
+          </div>
+          <div style="font-size:.75rem;color:var(--text-soft);margin-top:4px" id="photo-prog-text">Uploading…</div>
+        </div>
+        <input type="file" id="join-photo-file" accept="image/*" style="display:none" onchange="handleJoinPhoto(this)">
+      </div>
+      <input type="hidden" id="join-photo-url" value="">
+
+      <!-- Personal Info -->
+      <div class="join-section-title">Personal Information</div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Full Name *</label>
+          <input type="text" class="form-control" id="j-name" placeholder="As per Aadhaar / College ID">
+        </div>
+        <div class="form-group">
+          <label>Father's Name *</label>
+          <input type="text" class="form-control" id="j-father" placeholder="Father's full name">
+        </div>
+        <div class="form-group">
+          <label>Date of Birth *</label>
+          <input type="date" class="form-control" id="j-dob">
+        </div>
+        <div class="form-group">
+          <label>Gender *</label>
+          <select class="form-control" id="j-gender">
+            <option value="">— Select —</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select class="form-control" id="j-category">
+            <option>General</option><option>OBC</option><option>SC</option><option>ST</option><option>EWS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mobile Number *</label>
+          <input type="tel" class="form-control" id="j-phone" placeholder="+91 99999 99999">
+        </div>
+        <div class="form-group">
+          <label>WhatsApp Number</label>
+          <input type="tel" class="form-control" id="j-whatsapp" placeholder="If different from mobile">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" class="form-control" id="j-email" placeholder="you@example.com">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Permanent Address *</label>
+          <textarea class="form-control" id="j-address" rows="2" placeholder="Village / City, District, State, PIN"></textarea>
+        </div>
+      </div>
+
+      <!-- Academic Info -->
+      <div class="join-section-title">Academic Information</div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>College / University Name *</label>
+          <input type="text" class="form-control" id="j-college" placeholder="Full name of institution">
+        </div>
+        <div class="form-group">
+          <label>Course / Programme *</label>
+          <input type="text" class="form-control" id="j-course" placeholder="e.g. B.Tech, B.A., M.Sc.">
+        </div>
+        <div class="form-group">
+          <label>Branch / Subject</label>
+          <input type="text" class="form-control" id="j-branch" placeholder="e.g. Computer Science">
+        </div>
+        <div class="form-group">
+          <label>Year / Semester</label>
+          <select class="form-control" id="j-year">
+            <option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+            <option>4th Year</option><option>PG 1st Year</option><option>PG 2nd Year</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Roll Number / Enrollment No.</label>
+          <input type="text" class="form-control" id="j-rollno" placeholder="College roll number">
+        </div>
+      </div>
+
+      <!-- ABVP Unit -->
+      <div class="join-section-title">ABVP Unit Mapping</div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group">
+          <label>Select Unit *</label>
+          <select class="form-control" id="j-unit">
+            <option value="">— Loading units… —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Role Applying For</label>
+          <select class="form-control" id="j-role">
+            <option>Member</option>
+            <option>Executive Member</option>
+            <option>Joint Secretary</option>
+            <option>Secretary</option>
+            <option>Treasurer</option>
+            <option>Vice President</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Why do you want to join ABVP?</label>
+          <textarea class="form-control" id="j-reason" rows="3" placeholder="Share your motivation (optional)"></textarea>
+        </div>
+      </div>
+
+      <!-- Declaration -->
+      <div style="background:var(--cream);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:16px;font-size:.82rem;color:var(--text-mid);line-height:1.6">
+        <strong>Declaration:</strong> I hereby declare that all the information provided above is true and correct to the best of my knowledge. I pledge to abide by the principles and constitution of ABVP and work towards the mission of national service through student welfare.
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="j-declaration" style="width:16px;height:16px">
+          <label for="j-declaration" style="cursor:pointer">I agree to the above declaration *</label>
+        </div>
+      </div>
+    </div>
+    <div class="join-footer">
+      <div id="join-error" style="color:var(--danger);font-size:.82rem;margin-bottom:10px;display:none"></div>
+      <button class="btn-join" onclick="submitJoinForm()" id="btn-join-submit">Submit Membership Application</button>
+      <div style="margin-top:10px;font-size:.75rem;color:var(--text-soft)">
+        Already a member? <a href="#" onclick="document.getElementById('join-screen').classList.remove('show')" style="color:#ff6600">Return to login</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERIFY SCREEN (QR scan result) -->
+<div id="verify-screen" style="display:none;position:fixed;inset:0;z-index:9997;background:linear-gradient(135deg,var(--navy-deep),var(--navy));overflow-y:auto;padding:20px">
+  <div class="verify-card">
+    <div id="verify-content"></div>
+    <button class="btn btn-outline" style="margin-top:16px" onclick="document.getElementById('verify-screen').style.display='none'">Close</button>
+  </div>
+</div>
 <div id="auth-screen">
   <div class="auth-panel">
     <div class="auth-logo">
-      <div class="auth-logo-mark">O</div>
-      <h1>OrgNet</h1>
+      <div class="auth-logo-mark" style="background:linear-gradient(135deg,#ff6600,#ff8c42);font-size:18px">अ</div>
+      <h1>ABVP</h1>
       <p>State Organisation Management</p>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
-      <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Register Admin</button>
     </div>
     <div id="auth-login">
       <div class="auth-field">
         <label>Email Address</label>
-        <input type="email" id="login-email" placeholder="admin@organisation.org">
+        <input type="email" id="login-email" placeholder="admin@abvp.org">
       </div>
       <div class="auth-field">
         <label>Password</label>
         <input type="password" id="login-password" placeholder="••••••••">
       </div>
       <button class="btn-auth" onclick="doLogin()">Sign In to Dashboard</button>
-    </div>
+      <div style="text-align:center;margin-top:14px">
+        <button onclick="openJoinForm()" style="background:none;border:none;color:rgba(255,165,80,.9);font-family:var(--font-sans);font-size:.82rem;cursor:pointer;text-decoration:underline">
+          New Member? Fill Membership Form →
+        </button>
+      </div>
     <div id="auth-register" class="hidden">
+      <div style="background:rgba(255,102,0,.12);border:1px solid rgba(255,102,0,.3);border-radius:6px;padding:9px 12px;font-size:.76rem;color:rgba(255,255,255,.7);margin-bottom:12px;line-height:1.5">
+        &#9888;&#65039; University &amp; Unit admin registrations require <strong style="color:#ffb366">State Admin approval</strong> before access is granted.
+      </div>
       <div class="auth-field">
         <label>Full Name</label>
         <input type="text" id="reg-name" placeholder="Your full name">
       </div>
       <div class="auth-field">
         <label>Email Address</label>
-        <input type="email" id="reg-email" placeholder="you@organisation.org">
+        <input type="email" id="reg-email" placeholder="you@abvp.org">
       </div>
       <div class="auth-field">
         <label>Password</label>
-        <input type="password" id="reg-password" placeholder="Min 8 characters">
+        <input type="password" id="reg-password" placeholder="Min 6 characters">
       </div>
       <div class="auth-field">
-        <label>Role</label>
+        <label>Phone Number</label>
+        <input type="tel" id="reg-phone" placeholder="+91 99999 99999">
+      </div>
+      <div class="auth-field">
+        <label>Role Requested</label>
         <select id="reg-role">
           <option value="state_admin">State Admin</option>
-          <option value="university_admin">University Admin</option>
-          <option value="unit_admin">Unit Admin</option>
+          <option value="university_admin">University Admin (needs approval)</option>
+          <option value="unit_admin">Unit Admin (needs approval)</option>
         </select>
       </div>
-      <button class="btn-auth" onclick="doRegister()">Create Account</button>
+      <button class="btn-auth" onclick="doRegister()">Request Admin Access</button>
     </div>
     <div id="auth-error" class="auth-error"></div>
   </div>
@@ -924,10 +1188,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-brand">
-        <div class="sidebar-logo">O</div>
+        <div class="sidebar-logo" style="background:linear-gradient(135deg,#ff5500,#ff8c42);font-size:14px">अ</div>
         <div class="sidebar-brand-text">
-          <strong>OrgNet</strong>
-          <span>State Level ERP</span>
+          <strong>ABVP</strong>
+          <span>State ERP System</span>
         </div>
       </div>
     </div>
@@ -963,6 +1227,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <span class="nav-icon">◌</span> Notifications
       </a>
       <div class="nav-section-title">System</div>
+      <a class="nav-item" data-page="admins" onclick="navigate('admins')" id="nav-admins">
+        <span class="nav-icon">⊛</span> Admin Access
+        <span class="nav-badge" id="admin-badge" style="display:none">0</span>
+      </a>
       <a class="nav-item" data-page="settings" onclick="navigate('settings')">
         <span class="nav-icon">◎</span> Settings
       </a>
@@ -1048,8 +1316,23 @@ async function doLogin() {
   const pass = document.getElementById('login-password').value;
   if (!email||!pass) { showAuthErr('Please fill all fields'); return; }
   try {
-    const { signInWithEmailAndPassword } = window._fb;
-    await signInWithEmailAndPassword(window._fb.auth, email, pass);
+    const { signInWithEmailAndPassword, signOut, doc, getDoc } = window._fb;
+    const cred = await signInWithEmailAndPassword(window._fb.auth, email, pass);
+    // Check admin approval status
+    const userSnap = await getDoc(doc(window._fb.db, 'users', cred.user.uid));
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      if (userData.adminStatus === 'pending') {
+        await signOut(window._fb.auth);
+        showAuthErr('Your admin access is pending State Admin approval. Please wait.');
+        return;
+      }
+      if (userData.adminStatus === 'rejected') {
+        await signOut(window._fb.auth);
+        showAuthErr('Your admin access request was rejected. Contact the State Admin.');
+        return;
+      }
+    }
   } catch(e) {
     if (e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') {
       showAuthErr('Invalid email or password.');
@@ -1063,16 +1346,29 @@ async function doRegister() {
   const name = document.getElementById('reg-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const pass = document.getElementById('reg-password').value;
+  const phone = document.getElementById('reg-phone')?.value.trim()||'';
   const role = document.getElementById('reg-role').value;
   if (!name||!email||!pass) { showAuthErr('Please fill all fields'); return; }
   if (pass.length < 6) { showAuthErr('Password must be at least 6 characters'); return; }
   try {
     const { createUserWithEmailAndPassword, doc, setDoc, serverTimestamp } = window._fb;
     const cred = await createUserWithEmailAndPassword(window._fb.auth, email, pass);
+    // State admin is auto-approved; university/unit admins need state admin approval
+    const isStateAdmin = role === 'state_admin';
     await setDoc(doc(window._fb.db, 'users', cred.user.uid), {
-      name, email, role, createdAt: serverTimestamp(), uid: cred.user.uid
+      name, email, phone, role,
+      adminStatus: isStateAdmin ? 'approved' : 'pending',
+      createdAt: serverTimestamp(), uid: cred.user.uid
     });
-    toast('Account created! Signing in…','success');
+    if (!isStateAdmin) {
+      // Sign out immediately — must wait for approval
+      const { signOut } = window._fb;
+      await signOut(window._fb.auth);
+      showAuthErr('Registration submitted! Waiting for State Admin approval before you can log in.');
+      switchAuthTab('login');
+    } else {
+      toast('State Admin account created!','success');
+    }
   } catch(e) {
     if (e.code==='auth/email-already-in-use') {
       showAuthErr('This email is already registered. Please sign in.');
@@ -1102,7 +1398,7 @@ const PAGE_TITLES = {
   dashboard:'Dashboard', units:'Structure & Units',
   members:'Member Management', idcards:'ID Cards',
   finance:'Finance Management', events:'Event Management',
-  notifications:'Notifications', settings:'Settings'
+  notifications:'Notifications', admins:'Admin Access Control', settings:'Settings'
 };
 
 function navigate(page) {
@@ -1124,6 +1420,7 @@ function navigate(page) {
       case 'finance': renderFinance(); break;
       case 'events': renderEvents(); break;
       case 'notifications': renderNotifications(); break;
+      case 'admins': renderAdmins(); break;
       case 'settings': renderSettings(); break;
     }
   }, 50);
@@ -1151,6 +1448,7 @@ function initApp() {
       document.getElementById('app').classList.add('visible');
       navigate('dashboard');
       startPendingBadge();
+      startAdminBadge();
     } else {
       state.user = null;
       state.userProfile = null;
@@ -1466,6 +1764,7 @@ function renderUnitList(units) {
               <td>${u.contact||'—'}</td>
               <td>
                 <button class="btn btn-outline btn-xs" onclick="showUnitDetail('${u.id}')">View</button>
+                <button class="btn btn-outline btn-xs" onclick="editUnit('${u.id}')">✎ Edit</button>
                 <button class="btn btn-danger btn-xs" onclick="deleteUnit('${u.id}')">Delete</button>
               </td>
             </tr>`).join('') : '<tr><td colspan="6"><div class="empty-state"><p>No units</p></div></td></tr>'}
@@ -1587,28 +1886,67 @@ async function showUnitDetail(id) {
       <div class="modal modal-lg">
         <div class="modal-header">
           <h3>${u.name}</h3>
-          <button class="modal-close" onclick="document.getElementById('modal-unitdetail').remove()">✕</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-grid form-grid-2" style="margin-bottom:20px">
-            <div><div class="text-soft" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em">Level</div><div style="margin-top:3px"><span class="badge badge-navy">${u.level}</span></div></div>
-            <div><div class="text-soft" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em">Location</div><div style="font-weight:500;margin-top:3px">${u.location||'—'}</div></div>
-            <div><div class="text-soft" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em">${heads[u.level]||'Head'}</div><div style="font-weight:500;margin-top:3px">${u.headName||'—'}</div></div>
-            <div><div class="text-soft" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em">Contact</div><div style="font-weight:500;margin-top:3px">${u.contact||'—'}</div></div>
-            <div style="grid-column:1/-1"><div class="text-soft" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em">Address</div><div style="font-weight:500;margin-top:3px">${u.address||'—'}</div></div>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-outline btn-xs no-print" onclick="editUnit('${id}');document.getElementById('modal-unitdetail').remove()">✏ Edit</button>
+            <button class="btn btn-outline btn-xs no-print" onclick="printUnitReport('${id}')">🖨 Print</button>
+            <button class="modal-close" onclick="document.getElementById('modal-unitdetail').remove()">✕</button>
           </div>
-          <div class="card-header" style="margin:-20px -20px 16px;padding:12px 20px"><h3>Members (${members.length})</h3></div>
-          ${members.length ? members.map(m=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--cream-mid)">
-            <div class="avatar">${initials(m.name)}</div>
-            <div style="flex:1"><div style="font-weight:500;font-size:.87rem">${m.name}</div><div style="font-size:.75rem;color:var(--text-soft)">${m.role||'Member'} · ${m.phone||''}</div></div>
-            <span class="badge badge-${m.status==='approved'?'approved':m.status==='pending'?'pending':'rejected'}">${m.status}</span>
-          </div>`).join('') : '<div class="empty-state" style="padding:24px"><p>No members in this unit</p></div>'}
         </div>
-        <div class="modal-footer">
+        <div class="modal-body" id="unit-detail-body-${id}">
+          <div class="print-header">
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#ff5500,#ff8c42);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:16px;color:white;flex-shrink:0">अ</div>
+            <div><div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:#1a2744">ABVP — Unit Report</div>
+            <div style="font-size:.72rem;color:#718096">Akhil Bharatiya Vidyarthi Parishad</div></div>
+          </div>
+          <div class="form-grid form-grid-2" style="margin-bottom:18px">
+            <div><div class="text-soft" style="font-size:.73rem;text-transform:uppercase;letter-spacing:.06em">Level</div><div style="margin-top:3px"><span class="badge badge-navy">${u.level}</span></div></div>
+            <div><div class="text-soft" style="font-size:.73rem;text-transform:uppercase;letter-spacing:.06em">Location</div><div style="font-weight:500;margin-top:3px">${u.location||'—'}</div></div>
+            <div><div class="text-soft" style="font-size:.73rem;text-transform:uppercase;letter-spacing:.06em">${heads[u.level]||'Head'}</div><div style="font-weight:500;margin-top:3px">${u.headName||'—'}</div></div>
+            <div><div class="text-soft" style="font-size:.73rem;text-transform:uppercase;letter-spacing:.06em">Contact</div><div style="font-weight:500;margin-top:3px">${u.contact||'—'} ${u.headContact?'/ '+u.headContact:''}</div></div>
+            <div style="grid-column:1/-1"><div class="text-soft" style="font-size:.73rem;text-transform:uppercase;letter-spacing:.06em">Address</div><div style="font-weight:500;margin-top:3px">${u.address||'—'}</div></div>
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--navy);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:12px">
+            Members (${members.length}) — Approved: ${members.filter(m=>m.status==='approved').length} · Pending: ${members.filter(m=>m.status==='pending').length}
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Status</th></tr></thead>
+              <tbody>
+                ${members.length ? members.map(m=>`<tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:7px">
+                      ${m.photo?`<img src="${m.photo}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid #ff6600;flex-shrink:0">`:`<div class="avatar" style="width:26px;height:26px;font-size:.65rem">${initials(m.name)}</div>`}
+                      <div style="font-weight:500;font-size:.85rem">${m.name}</div>
+                    </div>
+                  </td>
+                  <td>${m.role||'Member'}</td>
+                  <td>${m.phone||'—'}</td>
+                  <td><span class="badge badge-${m.status==='approved'?'approved':m.status==='pending'?'pending':'rejected'}">${m.status}</span></td>
+                </tr>`).join('') : '<tr><td colspan="4"><div class="empty-state" style="padding:16px"><p>No members</p></div></td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer no-print">
           <button class="btn btn-outline" onclick="document.getElementById('modal-unitdetail').remove()">Close</button>
         </div>
       </div>
     </div>`);
+}
+
+function printUnitReport(id) {
+  const body = document.getElementById(`unit-detail-body-${id}`);
+  if (!body) return;
+  const w = window.open('','_blank','width=700,height=900');
+  w.document.write(`<!DOCTYPE html><html><head><title>ABVP Unit Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>body{margin:28px;font-family:'DM Sans',sans-serif;font-size:13px}
+    ${document.querySelector('style').textContent}
+    .print-header{display:flex!important;margin-bottom:14px}
+    .no-print,.btn,.badge{display:inline-flex}
+    </style></head><body>${body.innerHTML}
+    <script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
+  w.document.close();
 }
 
 // ═══════════════════════════════════════
@@ -1688,7 +2026,7 @@ function renderMembersTable(members) {
       <td><input type="checkbox" class="member-check" value="${m.id}"></td>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
-          <div class="avatar">${initials(m.name)}</div>
+          ${m.photo?`<img src="${m.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0">` : `<div class="avatar">${initials(m.name)}</div>`}
           <div>
             <div style="font-weight:500;font-size:.87rem">${m.name}</div>
             <div style="font-size:.73rem;color:var(--text-soft)">${m.email||''}</div>
@@ -1703,6 +2041,8 @@ function renderMembersTable(members) {
       <td>
         <div style="display:flex;gap:4px">
           <button class="btn btn-outline btn-xs" onclick="showMemberDetail('${m.id}')">View</button>
+          <button class="btn btn-outline btn-xs" onclick="editMember('${m.id}')">✎ Edit</button>
+          <button class="btn btn-outline btn-xs" onclick="printMemberProfile('${m.id}')">🖨</button>
           ${m.status==='pending'?`<button class="btn btn-success btn-xs" onclick="approveMember('${m.id}')">Approve</button>`:''}
           <button class="btn btn-danger btn-xs" onclick="deleteMember('${m.id}')">✕</button>
         </div>
@@ -1738,9 +2078,17 @@ async function bulkApprove() {
 }
 
 async function approveMember(id) {
-  const { doc, updateDoc } = window._fb;
-  await updateDoc(doc(window._fb.db,'members',id), {status:'approved'});
-  toast('Member approved','success');
+  const { doc, updateDoc, serverTimestamp } = window._fb;
+  const member = state.cache.members.find(m=>m.id===id);
+  const today = new Date().toISOString().split('T')[0];
+  const validity = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0];
+  await updateDoc(doc(window._fb.db,'members',id), {
+    status:'approved',
+    approvedAt: serverTimestamp(),
+    doj: member?.doj || today,
+    validity: member?.validity || validity
+  });
+  toast('Member approved ✓','success');
 }
 
 async function deleteMember(id) {
@@ -1857,35 +2205,168 @@ async function showMemberDetail(id) {
   const snap = await getDoc(doc(window._fb.db,'members',id));
   if (!snap.exists()) return;
   const m = {id:snap.id,...snap.data()};
-  const unit = state.cache.units.find(u=>u.id===m.unitId);
+  const units = state.cache.units;
+  const unit = units.find(u=>u.id===m.unitId);
+  const isAdmin = state.userProfile?.role === 'state_admin';
+
   document.getElementById('app').insertAdjacentHTML('beforeend',`
     <div class="modal-overlay show" id="modal-memberdetail">
-      <div class="modal">
+      <div class="modal modal-lg">
         <div class="modal-header">
           <h3>Member Profile</h3>
-          <button class="modal-close" onclick="document.getElementById('modal-memberdetail').remove()">✕</button>
+          <div style="display:flex;gap:5px">
+            ${isAdmin?`<button class="btn btn-outline btn-xs no-print" onclick="toggleEditMemberModal('${id}')">✏ Edit</button>`:''}
+            <button class="btn btn-outline btn-xs no-print" onclick="printMemberProfile()">🖨 Print</button>
+            <button class="modal-close" onclick="document.getElementById('modal-memberdetail').remove()">✕</button>
+          </div>
         </div>
-        <div class="modal-body">
-          <div style="text-align:center;margin-bottom:20px">
-            ${m.photo?`<img src="${m.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gold)">`
-              :`<div class="avatar avatar-lg" style="margin:0 auto">${initials(m.name)}</div>`}
-            <div class="font-serif" style="font-size:1.3rem;font-weight:600;color:var(--navy);margin-top:10px">${m.name}</div>
-            <div style="color:var(--text-soft);font-size:.83rem">${m.role||'Member'}</div>
-            <div style="margin-top:8px"><span class="badge badge-${m.status==='approved'?'approved':m.status==='rejected'?'rejected':'pending'}">${m.status||'pending'}</span></div>
+        <div class="modal-body" id="member-detail-body">
+          <div class="print-header">
+            <div style="width:44px;height:44px;background:linear-gradient(135deg,#ff5500,#ff8c42);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:18px;color:white;flex-shrink:0">अ</div>
+            <div><div style="font-family:var(--font-serif);font-size:1.15rem;font-weight:700;color:var(--navy)">ABVP — Member Profile</div>
+            <div style="font-size:.73rem;color:var(--text-soft)">Akhil Bharatiya Vidyarthi Parishad | State Organisation</div></div>
+          </div>
+          <div style="text-align:center;margin-bottom:16px">
+            ${m.photo?`<img src="${m.photo}" id="mdp-photo" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ff6600;display:block;margin:0 auto">`
+              :`<div class="avatar avatar-lg" style="margin:0 auto;background:linear-gradient(135deg,#ff5500,#ff8c42)">${initials(m.name)}</div>`}
+            ${isAdmin?`<div style="margin-top:5px"><label class="btn btn-outline btn-xs no-print" style="cursor:pointer">📷 Change Photo<input type="file" accept="image/*" style="display:none" onchange="uploadAndUpdatePhoto(this,'${id}')"></label></div>`:''}
+            <div class="font-serif" style="font-size:1.2rem;font-weight:600;color:var(--navy);margin-top:8px">${m.name}</div>
+            <div style="color:var(--text-soft);font-size:.82rem">${m.role||'Member'}</div>
+            <div style="margin-top:5px"><span class="badge badge-${m.status==='approved'?'approved':m.status==='rejected'?'rejected':'pending'}">${m.status||'pending'}</span></div>
           </div>
           <hr class="divider">
-          ${[['Member ID',m.memberId],['Phone',m.phone],['Email',m.email||'—'],['Unit',unit?unit.name:'—'],['Date Joined',m.doj||'—'],['Validity',m.validity||'—'],['Address',m.address||'—']].map(([l,v])=>`
-          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cream-mid);font-size:.87rem">
-            <span style="color:var(--text-soft)">${l}</span>
-            <span style="font-weight:500;text-align:right;max-width:60%">${v||'—'}</span>
-          </div>`).join('')}
+          <div class="form-grid form-grid-2" id="member-edit-fields" style="row-gap:10px">
+            ${buildMemberFields(m, units, false)}
+          </div>
         </div>
-        <div class="modal-footer">
-          ${m.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveMember('${m.id}');document.getElementById('modal-memberdetail').remove()">Approve</button>`:''}
+        <div class="modal-footer no-print">
+          ${m.status==='pending'&&isAdmin?`<button class="btn btn-success btn-sm" onclick="approveMember('${id}');document.getElementById('modal-memberdetail').remove()">✓ Approve</button>`:''}
+          ${m.status==='approved'&&isAdmin?`<button class="btn btn-danger btn-sm" onclick="rejectMemberById('${id}')">Reject</button>`:''}
+          <button class="btn btn-primary btn-sm" id="btn-save-edits" style="display:none" onclick="saveMemberEdits('${id}')">💾 Save</button>
           <button class="btn btn-outline" onclick="document.getElementById('modal-memberdetail').remove()">Close</button>
         </div>
       </div>
     </div>`);
+}
+
+function buildMemberFields(m, units, editMode) {
+  const unit = units.find(u=>u.id===m.unitId);
+  const rows = [
+    ['memberId','Member ID',m.memberId,'text',true],
+    ['phone','Phone',m.phone,'tel',false],
+    ['email','Email',m.email,'email',false],
+    ['fatherName',"Father's Name",m.fatherName,'text',false],
+    ['dob','Date of Birth',m.dob,'date',false],
+    ['gender','Gender',m.gender,'text',false],
+    ['category','Category',m.category,'text',false],
+    ['college','College / University',m.college,'text',false],
+    ['course','Course',m.course,'text',false],
+    ['branch','Branch / Subject',m.branch,'text',false],
+    ['yearOfStudy','Year / Semester',m.yearOfStudy,'text',false],
+    ['rollNo','Roll Number',m.rollNo,'text',false],
+    ['whatsapp','WhatsApp',m.whatsapp,'tel',false],
+    ['doj','Date of Joining',m.doj,'date',false],
+    ['validity','Valid Until',m.validity,'date',false],
+  ];
+  let html = rows.map(([key,label,val,type,ro])=>`
+    <div class="form-group">
+      <label style="font-size:.71rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">${label}</label>
+      ${editMode&&!ro
+        ?`<input type="${type}" class="form-control" id="mf-${key}" value="${(val||'').toString().replace(/"/g,'&quot;')}">`
+        :`<div style="font-weight:500;font-size:.87rem;padding:3px 0">${val||'—'}</div>`}
+    </div>`).join('');
+  // Address full width
+  html += `<div class="form-group" style="grid-column:1/-1">
+    <label style="font-size:.71rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">Address</label>
+    ${editMode?`<textarea class="form-control" id="mf-address" rows="2">${m.address||''}</textarea>`:`<div style="font-weight:500;font-size:.87rem;padding:3px 0">${m.address||'—'}</div>`}
+  </div>`;
+  // Unit
+  html += `<div class="form-group">
+    <label style="font-size:.71rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">Unit</label>
+    ${editMode?`<select class="form-control" id="mf-unitId"><option value="">— None —</option>${units.map(u=>`<option value="${u.id}" ${u.id===m.unitId?'selected':''}>[${u.level}] ${u.name}</option>`).join('')}</select>`
+    :`<div style="font-weight:500;font-size:.87rem;padding:3px 0">${unit?unit.name:'—'}</div>`}
+  </div>`;
+  // Role
+  html += `<div class="form-group">
+    <label style="font-size:.71rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">Role</label>
+    ${editMode?`<select class="form-control" id="mf-role">${['Member','Executive Member','Secretary','Treasurer','Joint Secretary','Vice President','President','Convenor','HoD','Principal'].map(r=>`<option ${r===m.role?'selected':''}>${r}</option>`).join('')}</select>`
+    :`<div style="font-weight:500;font-size:.87rem;padding:3px 0">${m.role||'Member'}</div>`}
+  </div>`;
+  // Motivation full width
+  if (m.reason||editMode) html += `<div class="form-group" style="grid-column:1/-1">
+    <label style="font-size:.71rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">Motivation / Reason</label>
+    ${editMode?`<textarea class="form-control" id="mf-reason" rows="2">${m.reason||''}</textarea>`:`<div style="font-weight:500;font-size:.87rem;padding:3px 0">${m.reason||'—'}</div>`}
+  </div>`;
+  return html;
+}
+
+function toggleEditMemberModal(id) {
+  const m = state.cache.members.find(x=>x.id===id);
+  if (!m) return;
+  const fieldsDiv = document.getElementById('member-edit-fields');
+  const saveBtn = document.getElementById('btn-save-edits');
+  const isEditing = saveBtn && saveBtn.style.display !== 'none';
+  if (isEditing) {
+    fieldsDiv.innerHTML = buildMemberFields(m, state.cache.units, false);
+    if(saveBtn) saveBtn.style.display='none';
+  } else {
+    fieldsDiv.innerHTML = buildMemberFields(m, state.cache.units, true);
+    if(saveBtn) saveBtn.style.display='inline-flex';
+  }
+}
+
+async function saveMemberEdits(id) {
+  const { doc, updateDoc } = window._fb;
+  const fields = ['phone','email','fatherName','dob','gender','category','college','course','branch','yearOfStudy','rollNo','whatsapp','doj','validity','address','reason','unitId','role'];
+  const updates = {};
+  fields.forEach(f => { const el=document.getElementById(`mf-${f}`); if(el) updates[f]=el.value.trim()||null; });
+  try {
+    await updateDoc(doc(window._fb.db,'members',id), updates);
+    toast('Member updated','success');
+    document.getElementById('modal-memberdetail').remove();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function rejectMemberById(id) {
+  if (!confirm_dialog('Reject this member?')) return;
+  const { doc, updateDoc } = window._fb;
+  await updateDoc(doc(window._fb.db,'members',id), {status:'rejected'});
+  toast('Member rejected');
+  document.getElementById('modal-memberdetail')?.remove();
+}
+
+async function uploadAndUpdatePhoto(input, memberId) {
+  const file = input.files[0]; if(!file) return;
+  const imgbbKey = localStorage.getItem('imgbbKey');
+  if(!imgbbKey) { toast('Set ImgBB API key in Settings first','error'); return; }
+  toast('Uploading photo…');
+  const fd = new FormData(); fd.append('image', file);
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`,{method:'POST',body:fd});
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error?.message||'Upload failed');
+    const url = data.data.url;
+    const { doc, updateDoc } = window._fb;
+    await updateDoc(doc(window._fb.db,'members',memberId),{photo:url});
+    const imgEl = document.getElementById('mdp-photo');
+    if(imgEl) { imgEl.src=url; }
+    toast('Photo updated!','success');
+  } catch(e) { toast('Photo upload failed: '+e.message,'error'); }
+}
+
+function printMemberProfile() {
+  const body = document.getElementById('member-detail-body');
+  if(!body) return;
+  const w = window.open('','_blank','width=700,height=900');
+  w.document.write(`<!DOCTYPE html><html><head><title>ABVP Member Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>body{margin:30px;font-family:'DM Sans',sans-serif;font-size:13px}
+    ${document.querySelector('style').textContent}
+    .print-header{display:flex!important;margin-bottom:16px}
+    .no-print,.btn{display:none!important}
+    </style></head><body>${body.innerHTML}
+    <script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
+  w.document.close();
 }
 
 // ═══════════════════════════════════════
@@ -1918,49 +2399,63 @@ async function renderIdCards() {
 function renderIdCardsGrid(members) {
   const grid = document.getElementById('id-cards-grid');
   if (!grid) return;
-  if (!members.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">▣</div><h4>No approved members</h4></div>'; return; }
+  if (!members.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">▣</div><h4>No approved members</h4><p>Approve members first to generate ID cards</p></div>'; return; }
   grid.innerHTML = members.map(m => {
     const unit = state.cache.units.find(u=>u.id===m.unitId);
+    const stateUnit = state.cache.units.find(u=>u.level==='state');
     return `
     <div>
       <div class="id-card" id="card-${m.id}">
-        <div class="id-card-header">
-          <div class="org-name">STATE ORGANISATION</div>
-          <div class="id-title">Official Identity Card</div>
+        <div class="id-card-header" style="background:linear-gradient(135deg,#0f1a30,#1a2744);border-bottom:3px solid #ff6600">
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px">
+            <div style="width:22px;height:22px;background:linear-gradient(135deg,#ff5500,#ff8c42);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:12px;font-weight:700;color:white;flex-shrink:0">अ</div>
+            <div class="org-name" style="color:#ff9966">ABVP</div>
+          </div>
+          <div style="font-size:.62rem;color:rgba(255,255,255,.45);letter-spacing:.1em">Akhil Bharatiya Vidyarthi Parishad</div>
+          <div class="id-title" style="margin-top:3px">Official Membership Card</div>
         </div>
         <div class="id-card-body">
-          ${m.photo?`<img src="${m.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);display:block;margin:0 auto 12px">`
-            :`<div class="id-photo">${initials(m.name)}</div>`}
+          ${m.photo
+            ? `<img src="${m.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #ff6600;display:block;margin:0 auto 10px">`
+            : `<div class="id-photo" style="background:linear-gradient(135deg,#ff5500,#1a2744)">${initials(m.name)}</div>`}
           <div class="id-member-name">${m.name}</div>
+          ${m.fatherName?`<div style="font-size:.68rem;color:var(--text-soft);text-align:center">S/D/W of ${m.fatherName}</div>`:''}
           <div class="id-member-role">${m.role||'Member'}</div>
           <div class="id-details">
             <div class="id-field"><label>Member ID</label><span>${m.memberId||'—'}</span></div>
             <div class="id-field"><label>Phone</label><span>${m.phone||'—'}</span></div>
             <div class="id-field"><label>Unit</label><span>${unit?unit.name.slice(0,20):'—'}</span></div>
             <div class="id-field"><label>Valid Until</label><span>${m.validity||'Lifetime'}</span></div>
+            ${m.college?`<div class="id-field" style="grid-column:1/-1"><label>College</label><span style="font-size:.75rem">${m.college.slice(0,35)}</span></div>`:''}
           </div>
         </div>
         <div class="id-card-footer">
           <div>
             <div class="id-number">${m.memberId||'—'}</div>
-            <div style="font-size:.62rem;color:var(--text-soft);margin-top:2px">ISSUED: ${m.doj||new Date().toLocaleDateString('en-IN')}</div>
+            <div style="font-size:.6rem;color:var(--text-soft);margin-top:2px">ISSUED: ${m.doj||new Date().toLocaleDateString('en-IN')}</div>
+            ${stateUnit?`<div style="font-size:.6rem;color:var(--text-soft)">${stateUnit.name}</div>`:''}
           </div>
-          <div id="qr-${m.id}" class="id-qr"></div>
+          <div id="qr-${m.id}" style="width:54px;height:54px"></div>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="btn btn-outline btn-sm" onclick="printIdCard('${m.id}')">🖨 Print</button>
-        <button class="btn btn-outline btn-sm" onclick="downloadIdCard('${m.id}')">↓ Save</button>
+        <button class="btn btn-outline btn-sm" onclick="editMember('${m.id}')">✏ Edit</button>
       </div>
     </div>`;
   }).join('');
 
-  // Generate QR codes
+  // Generate QR codes with ABVP verify data
   members.forEach(m => {
     const el = document.getElementById(`qr-${m.id}`);
     if (el && typeof QRCode !== 'undefined') {
       el.innerHTML = '';
-      new QRCode(el, { text: `ORGNET:${m.memberId}:${m.name}:${m.role||''}`, width:52, height:52, colorDark:'#1a2744', colorLight:'#faf8f3' });
+      try {
+        new QRCode(el, {
+          text: `ABVP:${m.memberId}:${m.name}:${m.phone}:${m.status}:${m.role||'Member'}`,
+          width: 54, height: 54, colorDark: '#1a2744', colorLight: '#faf8f3'
+        });
+      } catch(e) {}
     }
   });
 }
@@ -2196,7 +2691,7 @@ async function loadFinView(view) {
       <div class="card-header"><h3>Balance Sheet</h3><button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button></div>
       <div class="card-body">
         <div style="text-align:center;margin-bottom:20px">
-          <div class="font-serif" style="font-size:1.4rem;color:var(--navy)">STATE ORGANISATION</div>
+          <div class="font-serif" style="font-size:1.4rem;color:var(--navy)">ABVP — राष्ट्रीय संगठन</div>
           <div style="font-size:.8rem;color:var(--text-soft)">Balance Sheet — As on ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div>
         </div>
         <table style="width:100%;margin-bottom:16px">
@@ -2786,7 +3281,22 @@ function renderSettings() {
     <div class="page-header">
       <div class="page-header-left">
         <h2>Settings</h2>
-        <p>Profile, organisation and system configuration</p>
+        <p>Organisation profile and system configuration</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:18px;border:2px solid var(--gold)">
+      <div class="card-header" style="background:linear-gradient(135deg,#1a2744,#2e3f6a)">
+        <h3 style="color:white">🔗 Member Join Form</h3>
+      </div>
+      <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-weight:600;color:var(--navy)">Public Membership Registration Link</div>
+          <div style="font-size:.83rem;color:var(--text-soft);margin-top:3px">Share this link so new members can apply. Applications come to the Members page as Pending.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <code style="padding:8px 14px;background:var(--cream);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem">join.html</code>
+          <button class="btn btn-gold btn-sm" onclick="window.open('join.html','_blank')">Open Join Form</button>
+        </div>
       </div>
     </div>
     <div class="dashboard-grid">
@@ -2795,8 +3305,8 @@ function renderSettings() {
           <div class="card-header"><h3>Organisation Profile</h3></div>
           <div class="card-body">
             <div class="form-grid">
-              <div class="form-group"><label>Organisation Name</label><input type="text" class="form-control" id="s-orgname" placeholder="State Organisation Name" value="${localStorage.getItem('orgName')||''}"></div>
-              <div class="form-group"><label>State</label><input type="text" class="form-control" id="s-state" placeholder="e.g. Tamil Nadu" value="${localStorage.getItem('orgState')||''}"></div>
+              <div class="form-group"><label>Organisation Name</label><input type="text" class="form-control" id="s-orgname" placeholder="ABVP State Unit Name" value="${localStorage.getItem('orgName')||'ABVP State Unit'}"></div>
+              <div class="form-group"><label>State</label><input type="text" class="form-control" id="s-state" placeholder="e.g. Madhya Pradesh" value="${localStorage.getItem('orgState')||''}"></div>
               <div class="form-group"><label>Registration Number</label><input type="text" class="form-control" id="s-regno" placeholder="Reg. No." value="${localStorage.getItem('orgRegNo')||''}"></div>
               <div class="form-group"><label>Founded Year</label><input type="number" class="form-control" id="s-year" placeholder="e.g. 2010" value="${localStorage.getItem('orgYear')||''}"></div>
             </div>
@@ -2825,15 +3335,31 @@ function renderSettings() {
         </div>
       </div>
       <div class="col-12">
-        <div class="card">
-          <div class="card-header"><h3>ImgBB API Configuration</h3></div>
+        <div class="card" style="border:2px solid #ff6600">
+          <div class="card-header" style="background:linear-gradient(135deg,#fff8f5,#fff)">
+            <h3>📷 ImgBB Photo Upload Configuration</h3>
+            <span class="badge badge-pending">Required for join form photos</span>
+          </div>
           <div class="card-body">
-            <p style="font-size:.85rem;color:var(--text-soft);margin-bottom:14px">Configure ImgBB for member photo uploads. Get your API key from <a href="https://api.imgbb.com/" target="_blank" style="color:var(--navy)">api.imgbb.com</a></p>
-            <div class="form-group" style="max-width:500px">
-              <label>ImgBB API Key</label>
-              <input type="text" class="form-control" id="s-imgbb" placeholder="Your ImgBB API key" value="${localStorage.getItem('imgbbKey')||''}">
+            <p style="font-size:.85rem;color:var(--text-soft);margin-bottom:16px">
+              ImgBB is used to store member profile photos when they fill the join form. 
+              Get your free API key at <a href="https://api.imgbb.com/" target="_blank" style="color:#ff6600">api.imgbb.com</a> → Sign up → API → Generate key.
+            </p>
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label>ImgBB API Key *</label>
+                <input type="text" class="form-control" id="s-imgbb" placeholder="e.g. abc123def456..." value="${localStorage.getItem('imgbbKey')||'63ec07c5007caedfb2d332a1b9f058b5'}">
+              </div>
+              <div class="form-group">
+                <label>Test Upload (optional)</label>
+                <input type="file" class="form-control" id="s-imgbb-test" accept="image/*" style="padding:6px">
+              </div>
             </div>
-            <button class="btn btn-outline" style="margin-top:10px" onclick="localStorage.setItem('imgbbKey',document.getElementById('s-imgbb').value);toast('ImgBB key saved','success')">Save Key</button>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="saveImgbbKey()">Save API Key</button>
+              <button class="btn btn-outline" onclick="testImgbbUpload()">Test Upload</button>
+            </div>
+            <div id="imgbb-test-result" style="margin-top:10px;font-size:.82rem"></div>
           </div>
         </div>
       </div>
@@ -2880,12 +3406,597 @@ async function saveProfile() {
 // ═══════════════════════════════════════
 // STARTUP
 // ═══════════════════════════════════════
+
+// ═══════════════════════════════════════
+// EDIT MEMBER
+// ═══════════════════════════════════════
+async function editMember(id) {
+  const { doc, getDoc } = window._fb;
+  const snap = await getDoc(doc(window._fb.db,'members',id));
+  if(!snap.exists()) return;
+  const m = {id:snap.id,...snap.data()};
+  const units = state.cache.units||[];
+  document.getElementById('app').insertAdjacentHTML('beforeend',`
+    <div class="modal-overlay show" id="modal-editmember">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3>Edit Member — ${m.name}</h3>
+          <button class="modal-close" onclick="document.getElementById('modal-editmember').remove()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid form-grid-2">
+            <div class="form-group" style="grid-column:1/-1"><label>Full Name</label><input type="text" class="form-control" id="em-name" value="${m.name||''}"></div>
+            <div class="form-group"><label>Phone</label><input type="tel" class="form-control" id="em-phone" value="${m.phone||''}"></div>
+            <div class="form-group"><label>Email</label><input type="email" class="form-control" id="em-email" value="${m.email||''}"></div>
+            <div class="form-group"><label>WhatsApp</label><input type="tel" class="form-control" id="em-whatsapp" value="${m.whatsapp||''}"></div>
+            <div class="form-group"><label>Gender</label><select class="form-control" id="em-gender"><option ${m.gender==='Male'?'selected':''}>Male</option><option ${m.gender==='Female'?'selected':''}>Female</option><option ${m.gender==='Other'?'selected':''}>Other</option></select></div>
+            <div class="form-group"><label>Role</label>
+              <select class="form-control" id="em-role">
+                ${['Member','Active Member','Executive Member','Secretary','Treasurer','Joint Secretary','Vice President','President','Convenor','HoD','Principal'].map(r=>`<option value="${r}" ${m.role===r?'selected':''}>${r}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label>Unit</label>
+              <select class="form-control" id="em-unit">
+                <option value="">— None —</option>
+                ${units.map(u=>`<option value="${u.id}" ${m.unitId===u.id?'selected':''}>[${u.level}] ${u.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label>Status</label>
+              <select class="form-control" id="em-status">
+                <option value="pending" ${m.status==='pending'?'selected':''}>Pending</option>
+                <option value="approved" ${m.status==='approved'?'selected':''}>Approved</option>
+                <option value="rejected" ${m.status==='rejected'?'selected':''}>Rejected</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Date of Joining</label><input type="date" class="form-control" id="em-doj" value="${m.doj||''}"></div>
+            <div class="form-group"><label>Validity</label><input type="date" class="form-control" id="em-val" value="${m.validity||''}"></div>
+            <div class="form-group"><label>College</label><input type="text" class="form-control" id="em-college" value="${m.college||''}"></div>
+            <div class="form-group"><label>Course</label><input type="text" class="form-control" id="em-course" value="${m.course||''}"></div>
+            <div class="form-group"><label>Category</label><select class="form-control" id="em-category"><option value="">—</option>${['General','OBC','SC','ST','EWS'].map(c=>`<option ${m.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Member ID</label><input type="text" class="form-control" id="em-memberid" value="${m.memberId||''}"></div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Profile Photo URL (ImgBB link)</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                ${m.photo?`<img src="${m.photo}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0">`:'<div class="avatar">'+initials(m.name)+'</div>'}
+                <input type="url" class="form-control" id="em-photo" value="${m.photo||''}" placeholder="https://i.ibb.co/...">
+              </div>
+            </div>
+            <div class="form-group" style="grid-column:1/-1"><label>Address</label><textarea class="form-control" id="em-address" rows="2">${m.address||''}</textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="document.getElementById('modal-editmember').remove()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveEditMember('${id}')">Save Changes</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+async function saveEditMember(id) {
+  const { doc, updateDoc } = window._fb;
+  const updates = {
+    name: document.getElementById('em-name').value.trim(),
+    phone: document.getElementById('em-phone').value.trim(),
+    email: document.getElementById('em-email').value.trim(),
+    whatsapp: document.getElementById('em-whatsapp').value.trim(),
+    gender: document.getElementById('em-gender').value,
+    role: document.getElementById('em-role').value,
+    unitId: document.getElementById('em-unit').value||null,
+    status: document.getElementById('em-status').value,
+    doj: document.getElementById('em-doj').value,
+    validity: document.getElementById('em-val').value,
+    college: document.getElementById('em-college').value.trim(),
+    course: document.getElementById('em-course').value.trim(),
+    category: document.getElementById('em-category').value,
+    memberId: document.getElementById('em-memberid').value.trim(),
+    photo: document.getElementById('em-photo').value.trim()||null,
+    address: document.getElementById('em-address').value.trim(),
+  };
+  if(!updates.name){toast('Name required','error');return}
+  await updateDoc(doc(window._fb.db,'members',id), updates);
+  toast('Member updated successfully','success');
+  document.getElementById('modal-editmember').remove();
+}
+
+// ═══════════════════════════════════════
+// EDIT UNIT
+// ═══════════════════════════════════════
+async function editUnit(id) {
+  const { doc, getDoc } = window._fb;
+  const snap = await getDoc(doc(window._fb.db,'units',id));
+  if(!snap.exists()) return;
+  const u = {id:snap.id,...snap.data()};
+  const allUnits = state.cache.units||[];
+  const heads = {state:'Convenor',university:'President',college:'Principal',faculty:'HoD'};
+  document.getElementById('app').insertAdjacentHTML('beforeend',`
+    <div class="modal-overlay show" id="modal-editunit">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h3>Edit Unit — ${u.name}</h3>
+          <button class="modal-close" onclick="document.getElementById('modal-editunit').remove()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid form-grid-2">
+            <div class="form-group" style="grid-column:1/-1"><label>Unit Name *</label><input type="text" class="form-control" id="eu-name" value="${u.name||''}"></div>
+            <div class="form-group"><label>Level</label><select class="form-control" id="eu-level">${['state','university','college','faculty'].map(l=>`<option value="${l}" ${u.level===l?'selected':''}>${l}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Location</label><input type="text" class="form-control" id="eu-loc" value="${u.location||''}"></div>
+            <div class="form-group"><label>${heads[u.level]||'Head'} Name</label><input type="text" class="form-control" id="eu-head" value="${u.headName||''}"></div>
+            <div class="form-group"><label>Head Contact</label><input type="tel" class="form-control" id="eu-headcontact" value="${u.headContact||''}"></div>
+            <div class="form-group"><label>Unit Contact</label><input type="tel" class="form-control" id="eu-contact" value="${u.contact||''}"></div>
+            <div class="form-group"><label>Parent Unit</label>
+              <select class="form-control" id="eu-parent">
+                <option value="">— None —</option>
+                ${allUnits.filter(x=>x.id!==id).map(x=>`<option value="${x.id}" ${u.parentId===x.id?'selected':''}>[${x.level}] ${x.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group" style="grid-column:1/-1"><label>Address</label><textarea class="form-control" id="eu-address" rows="2">${u.address||''}</textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="document.getElementById('modal-editunit').remove()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveEditUnit('${id}')">Save Changes</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+async function saveEditUnit(id) {
+  const name = document.getElementById('eu-name').value.trim();
+  if(!name){toast('Name required','error');return}
+  const { doc, updateDoc } = window._fb;
+  await updateDoc(doc(window._fb.db,'units',id), {
+    name, level: document.getElementById('eu-level').value,
+    location: document.getElementById('eu-loc').value.trim(),
+    headName: document.getElementById('eu-head').value.trim(),
+    headContact: document.getElementById('eu-headcontact').value.trim(),
+    contact: document.getElementById('eu-contact').value.trim(),
+    parentId: document.getElementById('eu-parent').value||null,
+    address: document.getElementById('eu-address').value.trim()
+  });
+  toast('Unit updated','success');
+  document.getElementById('modal-editunit').remove();
+  renderUnits();
+}
+
+// ═══════════════════════════════════════
+// PRINT MEMBER PROFILE
+// ═══════════════════════════════════════
+async function printMemberProfile(id) {
+  const { doc, getDoc } = window._fb;
+  const snap = await getDoc(doc(window._fb.db,'members',id));
+  if(!snap.exists()) return;
+  const m = {id:snap.id,...snap.data()};
+  const unit = state.cache.units.find(u=>u.id===m.unitId);
+  const w = window.open('','_blank','width=600,height=800');
+  w.document.write(\`<!DOCTYPE html><html><head><title>Member Profile — \${m.name}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500&family=DM+Mono&display=swap" rel="stylesheet">
+    <style>body{margin:30px;font-family:'DM Sans',sans-serif;max-width:500px}
+    h1{font-family:'Cormorant Garamond';font-size:1.8rem;color:#1a2744;margin-bottom:4px}
+    .badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(45,122,79,.1);color:#2d7a4f}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    td{padding:8px 10px;border-bottom:1px solid #f0ece0;font-size:.85rem}
+    td:first-child{color:#718096;width:40%}
+    .header{display:flex;align-items:center;gap:16px;border-bottom:2px solid #c9a84c;padding-bottom:16px;margin-bottom:8px}
+    .photo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #c9a84c}
+    .initials{width:72px;height:72px;border-radius:50%;background:#1a2744;color:#e0c272;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond';font-size:1.6rem;font-weight:700}
+    .org{font-size:.7rem;color:#ff6600;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+    </style></head>
+    <body>
+    <div style="text-align:right;font-size:.7rem;color:#718096;margin-bottom:10px">ABVP — State Organisation</div>
+    <div class="header">
+      \${m.photo?'<img class="photo" src="'+m.photo+'">':'<div class="initials">'+m.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)+'</div>'}
+      <div>
+        <div class="org">ABVP Member Profile</div>
+        <h1>\${m.name}</h1>
+        <div style="color:#718096;font-size:.83rem">\${m.role||'Member'}</div>
+        <span class="badge" style="margin-top:5px">\${m.status}</span>
+      </div>
+    </div>
+    <table>
+      \${[
+        ['Member ID',m.memberId||'—'],
+        ['Phone',m.phone||'—'],
+        ['WhatsApp',m.whatsapp||'—'],
+        ['Email',m.email||'—'],
+        ['Gender',m.gender||'—'],
+        ['Date of Birth',m.dob||'—'],
+        ['Category',m.category||'—'],
+        ['Unit',unit?unit.name:'—'],
+        ['College',m.college||'—'],
+        ['Course',m.course||'—'],
+        ['Year',m.yearOfStudy||'—'],
+        ['Date Joined',m.doj||'—'],
+        ['Validity',m.validity||'—'],
+        ['Address',m.address||'—'],
+        ['Aadhaar',m.aadhaar?m.aadhaar.replace(/.(?=.{4})/g,'*'):'—'],
+      ].map(([l,v])=>'<tr><td>'+l+'</td><td style="font-weight:500">'+v+'</td></tr>').join('')}
+    </table>
+    <div style="text-align:center;font-size:.7rem;color:#718096;margin-top:20px;letter-spacing:.06em;text-transform:uppercase">Printed on \${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div>
+    <script>window.onload=()=>{window.print();window.close()}<\/script></body></html>\`);
+  w.document.close();
+}
+
+// ═══════════════════════════════════════
+// JOIN FORM MODULE
+// ═══════════════════════════════════════
+function openJoinForm() {
+  const joinScreen = document.getElementById('join-screen');
+  joinScreen.classList.add('show');
+  // Load units into join form dropdown
+  loadJoinUnits();
+}
+
+async function loadJoinUnits() {
+  const sel = document.getElementById('j-unit');
+  if (!sel) return;
+  // Try firebase if ready, else show placeholder
+  if (!window._fb) { sel.innerHTML = '<option value="">— No units loaded —</option>'; return; }
+  try {
+    const { collection, getDocs, query, where } = window._fb;
+    const snap = await getDocs(collection(window._fb.db, 'units'));
+    const units = snap.docs.map(d=>({id:d.id,...d.data()}));
+    sel.innerHTML = '<option value="">— Select your unit —</option>' +
+      units.map(u=>`<option value="${u.id}">[${u.level}] ${u.name}</option>`).join('');
+  } catch(e) {
+    sel.innerHTML = '<option value="">— Could not load units —</option>';
+  }
+}
+
+async function handleJoinPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  // Show local preview immediately
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('photo-preview');
+    const icon = document.getElementById('photo-icon');
+    const text = document.getElementById('photo-text');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    icon.style.display = 'none';
+    text.textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+
+  // Upload to ImgBB
+  const imgbbKey = localStorage.getItem('imgbbKey');
+  if (!imgbbKey) {
+    // Store file for later upload on submit
+    window._joinPhotoFile = file;
+    document.getElementById('photo-text').textContent = '📷 Photo ready — will upload on submit';
+    return;
+  }
+  await uploadJoinPhoto(file);
+}
+
+async function uploadJoinPhoto(file) {
+  const prog = document.getElementById('photo-progress');
+  const bar = document.getElementById('photo-prog-bar');
+  const progText = document.getElementById('photo-prog-text');
+  prog.style.display = 'block';
+  progText.textContent = 'Uploading to ImgBB…';
+  bar.style.width = '30%';
+
+  const imgbbKey = localStorage.getItem('imgbbKey');
+  if (!imgbbKey) {
+    prog.style.display = 'none';
+    toast('ImgBB key not set. Photo will be saved locally.', 'error');
+    return null;
+  }
+
+  const fd = new FormData();
+  fd.append('image', file);
+  try {
+    bar.style.width = '60%';
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, { method: 'POST', body: fd });
+    const data = await res.json();
+    bar.style.width = '100%';
+    if (!data.success) throw new Error(data.error?.message || 'Upload failed');
+    const url = data.data.url;
+    document.getElementById('join-photo-url').value = url;
+    progText.textContent = '✓ Photo uploaded successfully';
+    setTimeout(() => { prog.style.display = 'none'; }, 2000);
+    window._joinPhotoFile = null;
+    return url;
+  } catch(e) {
+    prog.style.display = 'none';
+    toast('Photo upload failed: ' + e.message, 'error');
+    return null;
+  }
+}
+
+async function submitJoinForm() {
+  // Validation
+  const name = document.getElementById('j-name').value.trim();
+  const phone = document.getElementById('j-phone').value.trim();
+  const father = document.getElementById('j-father').value.trim();
+  const dob = document.getElementById('j-dob').value;
+  const gender = document.getElementById('j-gender').value;
+  const address = document.getElementById('j-address').value.trim();
+  const college = document.getElementById('j-college').value.trim();
+  const course = document.getElementById('j-course').value.trim();
+  const declaration = document.getElementById('j-declaration').checked;
+  const errEl = document.getElementById('join-error');
+  errEl.style.display = 'none';
+
+  if (!name) { errEl.textContent='Full name is required'; errEl.style.display='block'; return; }
+  if (!phone) { errEl.textContent='Mobile number is required'; errEl.style.display='block'; return; }
+  if (!father) { errEl.textContent="Father's name is required"; errEl.style.display='block'; return; }
+  if (!dob) { errEl.textContent='Date of birth is required'; errEl.style.display='block'; return; }
+  if (!gender) { errEl.textContent='Gender is required'; errEl.style.display='block'; return; }
+  if (!address) { errEl.textContent='Address is required'; errEl.style.display='block'; return; }
+  if (!college) { errEl.textContent='College/University name is required'; errEl.style.display='block'; return; }
+  if (!course) { errEl.textContent='Course/Programme is required'; errEl.style.display='block'; return; }
+  if (!declaration) { errEl.textContent='Please accept the declaration'; errEl.style.display='block'; return; }
+
+  const btn = document.getElementById('btn-join-submit');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  // If photo file pending upload, try now
+  let photoUrl = document.getElementById('join-photo-url').value;
+  if (!photoUrl && window._joinPhotoFile) {
+    photoUrl = await uploadJoinPhoto(window._joinPhotoFile) || '';
+  }
+
+  const memberId = genId('ABVP');
+  const data = {
+    name, phone, memberId,
+    fatherName: father,
+    dob, gender,
+    category: document.getElementById('j-category').value,
+    whatsapp: document.getElementById('j-whatsapp').value.trim() || phone,
+    email: document.getElementById('j-email').value.trim(),
+    address,
+    college,
+    course: course,
+    branch: document.getElementById('j-branch').value.trim(),
+    yearOfStudy: document.getElementById('j-year').value,
+    rollNo: document.getElementById('j-rollno').value.trim(),
+    unitId: document.getElementById('j-unit').value || null,
+    role: document.getElementById('j-role').value,
+    reason: document.getElementById('j-reason').value.trim(),
+    photo: photoUrl || null,
+    status: 'pending',
+    source: 'join_form',
+    doj: new Date().toISOString().split('T')[0],
+    validity: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+  };
+
+  try {
+    const { collection, addDoc, serverTimestamp } = window._fb;
+    await addDoc(collection(window._fb.db, 'members'), {
+      ...data,
+      createdAt: serverTimestamp()
+    });
+
+    // Show success with QR
+    showJoinSuccess(data);
+  } catch(e) {
+    errEl.textContent = 'Submission failed: ' + e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Submit Membership Application';
+  }
+}
+
+function showJoinSuccess(data) {
+  const joinScreen = document.getElementById('join-screen');
+  joinScreen.innerHTML = `
+    <div style="max-width:480px;margin:40px auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+      <div style="background:linear-gradient(135deg,#ff5500,#1a2744);padding:28px;text-align:center;border-bottom:4px solid #c9a84c">
+        <div style="font-size:3rem;margin-bottom:8px">✅</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;color:white;font-size:1.6rem">Application Submitted!</h2>
+        <p style="color:rgba(255,255,255,.7);font-size:.85rem;margin-top:6px">Your ABVP membership application has been received</p>
+      </div>
+      <div style="padding:24px">
+        <div style="text-align:center;margin-bottom:20px">
+          ${data.photo ? `<img src="${data.photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #ff6600;margin-bottom:10px">` : ''}
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:#1a2744">${data.name}</div>
+          <div style="color:#718096;font-size:.83rem">${data.role} · ${data.college}</div>
+        </div>
+        <div style="background:#faf8f3;border:1px solid #ddd8cc;border-radius:8px;padding:14px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.85rem">
+            <span style="color:#718096">Application ID</span>
+            <strong style="font-family:'DM Mono',monospace;color:#1a2744">${data.memberId}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.85rem">
+            <span style="color:#718096">Status</span>
+            <span style="background:rgba(180,83,9,.1);color:#b45309;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600">PENDING APPROVAL</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.85rem">
+            <span style="color:#718096">Submitted On</span>
+            <strong>${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</strong>
+          </div>
+        </div>
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:.75rem;color:#718096;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Your Verification QR Code</div>
+          <div id="success-qr" style="display:inline-block;padding:10px;background:white;border:2px solid #1a2744;border-radius:8px"></div>
+        </div>
+        <div style="background:rgba(255,102,0,.06);border:1px solid rgba(255,102,0,.2);border-radius:6px;padding:12px;font-size:.8rem;color:#7a3800;line-height:1.6">
+          <strong>What's next?</strong><br>
+          Your application will be reviewed by the unit admin. You will be notified once approved. Your Member ID Card will be generated after approval.
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button onclick="shareJoinWA('${data.name}','${data.memberId}')" style="flex:1;padding:10px;background:linear-gradient(135deg,#25D366,#128C7E);border:none;border-radius:6px;color:white;font-weight:600;cursor:pointer;font-size:.85rem">📱 Share on WhatsApp</button>
+          <button onclick="window.print()" style="flex:1;padding:10px;background:#1a2744;border:none;border-radius:6px;color:white;font-weight:600;cursor:pointer;font-size:.85rem">🖨 Print Receipt</button>
+        </div>
+        <div style="text-align:center;margin-top:14px">
+          <a href="#" onclick="document.getElementById('join-screen').classList.remove('show');location.reload()" style="color:#ff6600;font-size:.8rem">← Return to login</a>
+        </div>
+      </div>
+    </div>`;
+
+  // Generate QR
+  setTimeout(() => {
+    const qrEl = document.getElementById('success-qr');
+    if (qrEl && typeof QRCode !== 'undefined') {
+      new QRCode(qrEl, {
+        text: `ABVP:${data.memberId}:${data.name}:${data.phone}:${data.status}`,
+        width: 140, height: 140,
+        colorDark: '#1a2744', colorLight: '#ffffff'
+      });
+    }
+  }, 300);
+}
+
+function shareJoinWA(name, memberId) {
+  const text = `🏛 *ABVP Membership Application Submitted*\n\n*Name:* ${name}\n*Application ID:* ${memberId}\n*Status:* Pending Approval\n\n_Akhil Bharatiya Vidyarthi Parishad_\n_Submitted on ${new Date().toLocaleDateString('en-IN')}_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+// ═══════════════════════════════════════
+// ADMIN ACCESS MANAGEMENT
+// ═══════════════════════════════════════
+async function renderAdmins() {
+  // Only state admins can see this
+  if (state.userProfile?.role !== 'state_admin') {
+    document.getElementById('page-content').innerHTML = '<div class="empty-state"><div class="empty-state-icon">⊛</div><h4>Access Denied</h4><p>Only State Admins can manage admin access.</p></div>';
+    return;
+  }
+  const pc = document.getElementById('page-content');
+  pc.innerHTML = \`
+    <div class="page-header">
+      <div class="page-header-left">
+        <h2>Admin Access Control</h2>
+        <p>Approve or reject university and unit admin registration requests</p>
+      </div>
+    </div>
+    <div class="tabs" id="adm-tabs">
+      <button class="tab-btn active" onclick="switchAdmTab('pending',this)">Pending Requests</button>
+      <button class="tab-btn" onclick="switchAdmTab('all',this)">All Admins</button>
+    </div>
+    <div id="admins-view"></div>\`;
+  loadAdminsView('pending');
+}
+
+async function loadAdminsView(filter) {
+  const { collection, getDocs, query, where, orderBy } = window._fb;
+  let q;
+  if(filter==='pending') {
+    q = query(collection(window._fb.db,'users'), where('adminStatus','==','pending'));
+  } else {
+    q = query(collection(window._fb.db,'users'), orderBy('createdAt','desc'));
+  }
+  const snap = await getDocs(q);
+  const admins = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const container = document.getElementById('admins-view');
+  if(!container) return;
+
+  if(!admins.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⊛</div><h4>'+(filter==='pending'?'No pending requests':'No admins registered')+'</h4></div>';
+    return;
+  }
+
+  container.innerHTML = \`<div class="card"><div class="table-wrap"><table>
+    <thead><tr>
+      <th>Admin</th><th>Email</th><th>Phone</th><th>Role Requested</th><th>Status</th><th>Registered</th><th>Actions</th>
+    </tr></thead>
+    <tbody>
+      \${admins.map(a=>\`<tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="avatar">\${initials(a.name||'?')}</div>
+            <span style="font-weight:500;font-size:.87rem">\${a.name||'—'}</span>
+          </div>
+        </td>
+        <td style="font-size:.82rem">\${a.email||'—'}</td>
+        <td>\${a.phone||'—'}</td>
+        <td><span class="badge badge-navy">\${(a.role||'').replace(/_/g,' ')}</span></td>
+        <td><span class="badge badge-\${a.adminStatus==='approved'?'approved':a.adminStatus==='rejected'?'rejected':'pending'}">\${a.adminStatus||'pending'}</span></td>
+        <td style="font-size:.8rem;color:var(--text-soft)">\${fmtDate(a.createdAt)}</td>
+        <td>
+          <div style="display:flex;gap:5px">
+            \${a.adminStatus!=='approved'?\`<button class="btn btn-success btn-xs" onclick="setAdminStatus('\${a.id}','approved')">✓ Approve</button>\`:''}
+            \${a.adminStatus!=='rejected'?\`<button class="btn btn-danger btn-xs" onclick="setAdminStatus('\${a.id}','rejected')">✕ Reject</button>\`:''}
+            \${a.adminStatus==='rejected'?\`<button class="btn btn-outline btn-xs" onclick="setAdminStatus('\${a.id}','approved')">Restore</button>\`:''}
+          </div>
+        </td>
+      </tr>\`).join('')}
+    </tbody>
+  </table></div></div>\`;
+}
+
+async function setAdminStatus(uid, status) {
+  const { doc, updateDoc } = window._fb;
+  await updateDoc(doc(window._fb.db,'users',uid), {adminStatus: status});
+  toast(\`Admin access \${status}\`,'success');
+  loadAdminsView('all');
+  // Update badge
+  const { collection, query, where, getDocs } = window._fb;
+  const q = query(collection(window._fb.db,'users'), where('adminStatus','==','pending'));
+  const snap = await getDocs(q);
+  const badge = document.getElementById('admin-badge');
+  if(badge){ badge.textContent=snap.size; badge.style.display=snap.size>0?'inline-flex':'none'; }
+}
+
+function switchAdmTab(v,btn){
+  document.querySelectorAll('#adm-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAdminsView(v);
+}
+
+// ═══════════════════════════════════════
+// ADMIN BADGE WATCHER
+// ═══════════════════════════════════════
+async function startAdminBadge() {
+  if(state.userProfile?.role !== 'state_admin') return;
+  const { collection, query, where, onSnapshot } = window._fb;
+  const q = query(collection(window._fb.db,'users'), where('adminStatus','==','pending'));
+  const unsub = onSnapshot(q, snap => {
+    const badge = document.getElementById('admin-badge');
+    if(badge){ badge.textContent=snap.size; badge.style.display=snap.size>0?'inline-flex':'none'; }
+  });
+  state.unsubscribers.push(unsub);
+}
+
+function saveImgbbKey() {
+  const key = document.getElementById('s-imgbb').value.trim();
+  if (!key) { toast('Enter your ImgBB API key','error'); return; }
+  localStorage.setItem('imgbbKey', key);
+  toast('ImgBB API key saved ✓','success');
+}
+
+async function testImgbbUpload() {
+  const key = document.getElementById('s-imgbb').value.trim() || localStorage.getItem('imgbbKey');
+  const fileInput = document.getElementById('s-imgbb-test');
+  const resultEl = document.getElementById('imgbb-test-result');
+  if (!key) { toast('Enter ImgBB key first','error'); return; }
+  if (!fileInput?.files[0]) { toast('Select a test image file','error'); return; }
+  resultEl.innerHTML = '<span style="color:var(--text-soft)">Uploading test image…</span>';
+  const fd = new FormData();
+  fd.append('image', fileInput.files[0]);
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:'POST',body:fd});
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error?.message || 'Upload failed');
+    resultEl.innerHTML = `<span style="color:var(--success)">✓ Upload successful! 
+      <a href="${data.data.url}" target="_blank" style="color:var(--navy)">View image →</a></span>`;
+    localStorage.setItem('imgbbKey', key);
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--danger)">✕ Upload failed: ${e.message}</span>`;
+  }
+}
+
 function startApp() {
+  // Set ImgBB key if not already saved
+  if (!localStorage.getItem('imgbbKey')) {
+    localStorage.setItem('imgbbKey', '63ec07c5007caedfb2d332a1b9f058b5');
+  }
   if (window._fbReady) initApp();
   else document.addEventListener('fbReady', initApp, {once:true});
-  // Offline cache
   window.addEventListener('online', () => toast('Connection restored','success'));
   window.addEventListener('offline', () => toast('Working offline — changes will sync when connected','error'));
+  // Pre-load units for join form when firebase ready
+  document.addEventListener('fbReady', () => {
+    // Silently pre-load units list so join form is fast
+    if (window._fb) {
+      const { collection, getDocs } = window._fb;
+      getDocs(collection(window._fb.db,'units')).then(snap => {
+        state.cache.units = snap.docs.map(d=>({id:d.id,...d.data()}));
+      }).catch(()=>{});
+    }
+  }, {once:true});
 }
 
 startApp();
