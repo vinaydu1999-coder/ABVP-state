@@ -1176,6 +1176,9 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <button class="btn-auth" onclick="doRegister()">Request Admin Access</button>
     </div>
     <div id="auth-error" class="auth-error"></div>
+    <div id="fb-status" style="text-align:center;margin-top:10px;font-size:.75rem;color:rgba(255,255,255,.35)">
+      ⏳ Connecting to server…
+    </div>
   </div>
 </div>
 
@@ -1201,37 +1204,37 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section-title">Overview</div>
-      <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+      <a class="nav-item active" data-page="dashboard" href="#" onclick="navigate('dashboard');return false;">
         <span class="nav-icon">⊞</span> Dashboard
       </a>
       <div class="nav-section-title">Organisation</div>
-      <a class="nav-item" data-page="units" onclick="navigate('units')">
+      <a class="nav-item" data-page="units" href="#" onclick="navigate('units');return false;">
         <span class="nav-icon">◫</span> Structure & Units
       </a>
-      <a class="nav-item" data-page="members" onclick="navigate('members')">
+      <a class="nav-item" data-page="members" href="#" onclick="navigate('members');return false;">
         <span class="nav-icon">◉</span> Members
         <span class="nav-badge" id="pending-badge" style="display:none">0</span>
       </a>
-      <a class="nav-item" data-page="idcards" onclick="navigate('idcards')">
+      <a class="nav-item" data-page="idcards" href="#" onclick="navigate('idcards');return false;">
         <span class="nav-icon">▣</span> ID Cards
       </a>
       <div class="nav-section-title">Operations</div>
-      <a class="nav-item" data-page="finance" onclick="navigate('finance')">
+      <a class="nav-item" data-page="finance" href="#" onclick="navigate('finance');return false;">
         <span class="nav-icon">◈</span> Finance
       </a>
-      <a class="nav-item" data-page="events" onclick="navigate('events')">
+      <a class="nav-item" data-page="events" href="#" onclick="navigate('events');return false;">
         <span class="nav-icon">◷</span> Events
       </a>
       <div class="nav-section-title">Communication</div>
-      <a class="nav-item" data-page="notifications" onclick="navigate('notifications')">
+      <a class="nav-item" data-page="notifications" href="#" onclick="navigate('notifications');return false;">
         <span class="nav-icon">◌</span> Notifications
       </a>
       <div class="nav-section-title">System</div>
-      <a class="nav-item" data-page="admins" onclick="navigate('admins')" id="nav-admins">
+      <a class="nav-item" data-page="admins" href="#" onclick="navigate('admins');return false;" id="nav-admins">
         <span class="nav-icon">⊛</span> Admin Access
         <span class="nav-badge" id="admin-badge" style="display:none">0</span>
       </a>
-      <a class="nav-item" data-page="settings" onclick="navigate('settings')">
+      <a class="nav-item" data-page="settings" href="#" onclick="navigate('settings');return false;">
         <span class="nav-icon">◎</span> Settings
       </a>
     </nav>
@@ -1246,7 +1249,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <button class="topbar-menu-btn" onclick="toggleSidebar()">☰</button>
       <div class="topbar-title" id="topbar-title">Dashboard</div>
       <div class="topbar-actions">
-        <button class="topbar-notif" onclick="navigate('notifications')">
+        <button class="topbar-notif" onclick="navigate('notifications');return false;">
           🔔<span class="notif-dot" id="notif-dot"></span>
         </button>
       </div>
@@ -1315,6 +1318,7 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-password').value;
   if (!email||!pass) { showAuthErr('Please fill all fields'); return; }
+  if (!window._fb) { showAuthErr('App still loading — please wait a moment and try again.'); return; }
   try {
     const { signInWithEmailAndPassword, signOut, doc, getDoc } = window._fb;
     const cred = await signInWithEmailAndPassword(window._fb.auth, email, pass);
@@ -3983,20 +3987,35 @@ function startApp() {
   if (!localStorage.getItem('imgbbKey')) {
     localStorage.setItem('imgbbKey', '63ec07c5007caedfb2d332a1b9f058b5');
   }
-  if (window._fbReady) initApp();
-  else document.addEventListener('fbReady', initApp, {once:true});
-  window.addEventListener('online', () => toast('Connection restored','success'));
-  window.addEventListener('offline', () => toast('Working offline — changes will sync when connected','error'));
-  // Pre-load units for join form when firebase ready
-  document.addEventListener('fbReady', () => {
-    // Silently pre-load units list so join form is fast
+
+  function onFbReady() {
+    const statusEl = document.getElementById('fb-status');
+    if (statusEl) statusEl.textContent = '✓ Connected — ready to sign in';
+    initApp();
+    // Pre-load units for join form
     if (window._fb) {
       const { collection, getDocs } = window._fb;
       getDocs(collection(window._fb.db,'units')).then(snap => {
         state.cache.units = snap.docs.map(d=>({id:d.id,...d.data()}));
       }).catch(()=>{});
     }
-  }, {once:true});
+  }
+
+  if (window._fbReady) {
+    onFbReady();
+  } else {
+    document.addEventListener('fbReady', onFbReady, {once:true});
+    // Timeout warning if Firebase doesn't load in 8s
+    setTimeout(() => {
+      if (!window._fbReady) {
+        const statusEl = document.getElementById('fb-status');
+        if (statusEl) statusEl.innerHTML = '⚠️ <span style="color:#fc8181">Connection slow — check your internet or Firebase config</span>';
+      }
+    }, 8000);
+  }
+
+  window.addEventListener('online', () => toast('Connection restored','success'));
+  window.addEventListener('offline', () => toast('Working offline — changes will sync when connected','error'));
 }
 
 startApp();
