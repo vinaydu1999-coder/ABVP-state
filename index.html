@@ -18,15 +18,14 @@
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   // ─── FIREBASE CONFIG — replace with your project ───────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyByYPUw1VPs2vU8PlK0ZlXGCZ_q6BX1BeI",
-  authDomain: "abvp-state.firebaseapp.com",
-  projectId: "abvp-state",
-  storageBucket: "abvp-state.firebasestorage.app",
-  messagingSenderId: "590383791949",
-  appId: "1:590383791949:web:470be5cd57983ad93dc104",
-  measurementId: "G-X87LFE1X1J"
-};
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
   // ───────────────────────────────────────────────────────────────────────────
 
   const app = initializeApp(firebaseConfig);
@@ -34,7 +33,12 @@ const firebaseConfig = {
   const auth = getAuth(app);
 
   // Make globally available
-  window._fb = { db, auth, collection, doc, addDoc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp, writeBatch };
+  window._fb = {
+    db, auth,
+    collection, doc, addDoc, setDoc, getDoc, getDocs, updateDoc, deleteDoc,
+    query, where, orderBy, onSnapshot, serverTimestamp, writeBatch,
+    signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
+  };
   window._fbReady = true;
   document.dispatchEvent(new Event('fbReady'));
 </script>
@@ -1043,10 +1047,15 @@ async function doLogin() {
   const pass = document.getElementById('login-password').value;
   if (!email||!pass) { showAuthErr('Please fill all fields'); return; }
   try {
-    await window._fb.auth.signInWithEmailAndPassword(window._fb.auth, email, pass).catch(()=>null);
     const { signInWithEmailAndPassword } = window._fb;
     await signInWithEmailAndPassword(window._fb.auth, email, pass);
-  } catch(e) { showAuthErr(e.message); }
+  } catch(e) {
+    if (e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') {
+      showAuthErr('Invalid email or password.');
+    } else {
+      showAuthErr(e.message);
+    }
+  }
 }
 
 async function doRegister() {
@@ -1063,13 +1072,21 @@ async function doRegister() {
       name, email, role, createdAt: serverTimestamp(), uid: cred.user.uid
     });
     toast('Account created! Signing in…','success');
-  } catch(e) { showAuthErr(e.message); }
+  } catch(e) {
+    if (e.code==='auth/email-already-in-use') {
+      showAuthErr('This email is already registered. Please sign in.');
+    } else if (e.code==='auth/weak-password') {
+      showAuthErr('Password is too weak. Use at least 6 characters.');
+    } else {
+      showAuthErr(e.message);
+    }
+  }
 }
 
 function showAuthErr(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg;
-  setTimeout(() => el.textContent='', 4000);
+  setTimeout(() => el.textContent='', 5000);
 }
 
 async function doLogout() {
