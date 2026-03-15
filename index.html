@@ -7,32 +7,29 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ABVP — State Organisation Management</title>
-<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<!-- Firebase compat SDK — synchronous, no module scope issues -->
+<!-- Firebase Compat SDK (v9 compat — loads synchronously, no ES module issues) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
   firebase.initializeApp({
-    apiKey: "AIzaSyByYPUw1VPs2vU8PlK0ZlXGCZ_q6BX1BeI",
-    authDomain: "abvp-state.firebaseapp.com",
-    projectId: "abvp-state",
-    storageBucket: "abvp-state.firebasestorage.app",
+    apiKey:            "AIzaSyByYPUw1VPs2vU8PlK0ZlXGCZ_q6BX1BeI",
+    authDomain:        "abvp-state.firebaseapp.com",
+    projectId:         "abvp-state",
+    storageBucket:     "abvp-state.firebasestorage.app",
     messagingSenderId: "590383791949",
-    appId: "1:590383791949:web:470be5cd57983ad93dc104"
+    appId:             "1:590383791949:web:470be5cd57983ad93dc104"
   });
   window._fbReady = true;
-  document.dispatchEvent(new Event('fbReady'));
 </script>
 
-<!-- QRCode lib -->
+<!-- QRCode -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    DESIGN SYSTEM — Deep navy / warm gold / cream
@@ -947,7 +944,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 </style>
 </head>
 <body>
-
 <!-- Toast -->
 <div id="toast-container"></div>
 
@@ -1244,17 +1240,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════
-     JAVASCRIPT — All modules
-════════════════════════════════════════════════════════════ -->
-<!-- ════════════════════════════════════════════════════════════
-     JAVASCRIPT — All modules
-════════════════════════════════════════════════════════════ -->
 <script>
-// ═══════════════════════════════════════
-// FIREBASE COMPAT GLOBALS
-// Direct compat SDK API — no wrapper layer
-// ═══════════════════════════════════════
 const db   = firebase.firestore();
 const auth = firebase.auth();
 
@@ -1302,7 +1288,6 @@ function createUserWithEmailAndPassword(authRef, email, pass) { return authRef.c
 function signOut(authRef)                                     { return authRef.signOut(); }
 function onAuthStateChanged(authRef, cb)                      { return authRef.onAuthStateChanged(cb); }
 
-<script>
 // ═══════════════════════════════════════
 // STATE & HELPERS
 // ═══════════════════════════════════════
@@ -4012,7 +3997,6 @@ function startApp() {
 }
 
 startApp();
-</script>
 </script>
 </body>
 </html>
